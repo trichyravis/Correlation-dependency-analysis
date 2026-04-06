@@ -103,6 +103,18 @@ st.markdown(f"""
   div[data-testid="stTabs"] button[aria-selected="true"] {{
     color:{GOLD} !important; border-bottom:2px solid {GOLD} !important;
   }}
+  /* Radio button contrast fix */
+  div[data-testid="stRadio"] label span {{ color:{TXT} !important; -webkit-text-fill-color:{TXT} !important; }}
+  div[data-testid="stRadio"] label {{ color:{TXT} !important; }}
+  div[data-testid="stSidebarContent"] div[data-testid="stRadio"] label span {{
+    color:{TXT} !important; -webkit-text-fill-color:{TXT} !important;
+  }}
+  section[data-testid="stSidebar"] label {{
+    color:{TXT} !important; -webkit-text-fill-color:{TXT} !important;
+  }}
+  section[data-testid="stSidebar"] p {{
+    color:{TXT} !important; -webkit-text-fill-color:{TXT} !important;
+  }}
   div[data-testid="metric-container"] {{ background:{CARD}; border:1px solid {GOLD}33; border-radius:8px; padding:12px; }}
   div[data-testid="metric-container"] label {{ color:{MUTED}; }}
   div[data-testid="metric-container"] div[data-testid="stMetricValue"] {{ color:{GOLD}; }}
@@ -121,19 +133,43 @@ PLOT_LAYOUT = dict(
     plot_bgcolor="rgba(17,34,64,0.6)",
     font=dict(family="Inter", color=TXT, size=11),
     title_font=dict(family="Playfair Display", color=GOLD, size=14),
-    legend=dict(bgcolor="rgba(0,0,0,0.4)", bordercolor=GOLD+"44", borderwidth=1,
+    legend=dict(bgcolor="rgba(0,0,0,0.4)", bordercolor="rgba(255,215,0,0.27)", borderwidth=1,
                 font=dict(color=TXT)),
     margin=dict(l=40, r=20, t=50, b=40),
-    xaxis=dict(gridcolor=BLUE+"66", linecolor=GOLD+"44", zerolinecolor=GOLD+"22",
-               tickfont=dict(color=MUTED)),
-    yaxis=dict(gridcolor=BLUE+"66", linecolor=GOLD+"44", zerolinecolor=GOLD+"22",
-               tickfont=dict(color=MUTED)),
+)
+
+AXIS_STYLE = dict(
+    gridcolor="rgba(0,51,102,0.4)", linecolor="rgba(255,215,0,0.27)",
+    zerolinecolor="rgba(255,215,0,0.13)", tickfont=dict(color=MUTED),
 )
 
 def mp_layout(**kwargs):
+    """Build layout dict — never include xaxis/yaxis here; apply via update_axes() instead."""
     d = PLOT_LAYOUT.copy()
-    d.update(kwargs)
+    # Strip out any axis keys passed by caller to avoid Plotly 5.x validation errors
+    axis_overrides = {}
+    clean = {}
+    for k, v in kwargs.items():
+        if k.startswith("xaxis") or k.startswith("yaxis"):
+            axis_overrides[k] = v
+        else:
+            clean[k] = v
+    d.update(clean)
+    d["_axis_overrides"] = axis_overrides  # carry them separately
     return d
+
+def apply_layout(fig, layout_dict, rows=1, cols=1):
+    """Apply layout to fig, then style all axes consistently."""
+    ax_overrides = layout_dict.pop("_axis_overrides", {})
+    fig.update_layout(**layout_dict)
+    # Apply default axis style to every subplot axis
+    for r in range(1, rows+1):
+        for c in range(1, cols+1):
+            suffix = "" if (r==1 and c==1) else str((r-1)*cols + c)
+            for prefix in ("xaxis", "yaxis"):
+                key = f"{prefix}{suffix}"
+                style = {**AXIS_STYLE, **(ax_overrides.get(key) or {})}
+                fig.update_layout(**{key: style})
 
 # ══════════════════════════════════════════════════════════════
 #  HELPERS
@@ -182,7 +218,7 @@ st.html("""
 <div class="sidebar-logo">
   <h1>⛰️ THE MOUNTAIN PATH</h1>
   <p>WORLD OF FINANCE</p>
-  <p style="font-size:0.6rem;color:#FFD70088;margin-top:4px;">themountainpathacademy.com</p>
+  <p style="font-size:0.6rem;color:rgba(255,215,0,0.53);margin-top:4px;">themountainpathacademy.com</p>
 </div>
 """)
 
@@ -304,9 +340,9 @@ if PAGE == "overview":
                    height=320, showlegend=True,
                    legend=dict(orientation="h", y=-0.15))
     for ax in ['xaxis','xaxis2','xaxis3','yaxis','yaxis2','yaxis3']:
-        lo[ax] = dict(gridcolor=BLUE+"55", linecolor=GOLD+"33",
-                      tickfont=dict(color=MUTED), zerolinecolor=GOLD+"22")
-    fig.update_layout(**lo)
+        lo[ax] = dict(gridcolor="rgba(0,51,102,0.33)", linecolor="rgba(255,215,0,0.2)",
+                      tickfont=dict(color=MUTED), zerolinecolor="rgba(255,215,0,0.13)")
+    apply_layout(fig, lo)
     for ann in fig.layout.annotations:
         ann.font.color = GOLD
         ann.font.family = "Playfair Display"
@@ -355,7 +391,7 @@ elif PAGE == "correlation":
                             line=dict(color=BLUE, width=0.3)),
                 name="Data"
             ))
-            fig.update_layout(**mp_layout(
+            apply_layout(fig, mp_layout(
                 title=f"Scatter: {rel_type}",
                 height=380, xaxis_title="X", yaxis_title="Y"
             ))
@@ -409,7 +445,7 @@ elif PAGE == "correlation":
             texttemplate="%{text}", textfont=dict(size=10),
             hoverongaps=False,
         ))
-        fig.update_layout(**mp_layout(
+        apply_layout(fig, mp_layout(
             title=f"Indian Market Correlation Matrix — {mode}",
             height=480, xaxis_title="", yaxis_title="",
         ))
@@ -446,15 +482,15 @@ elif PAGE == "correlation":
         fig.add_trace(go.Scatter(x=list(range(window,n_days)), y=roll_corr,
                                  fill='tozeroy', name="Rolling ρ",
                                  line=dict(color=RED,width=2),
-                                 fillcolor=RED+"22"),2,1)
+                                 fillcolor="rgba(220,53,69,0.13)"),2,1)
         fig.add_vline(x=crisis_start, line_dash="dash", line_color=GOLD,
                       annotation_text="Crisis Start", annotation_font_color=GOLD)
         lo = mp_layout(title="Dynamic Correlation — Regime Change Simulation",
                        height=480, showlegend=True)
         for ax in ['xaxis','xaxis2','yaxis','yaxis2']:
-            lo[ax] = dict(gridcolor=BLUE+"55",linecolor=GOLD+"33",
-                          tickfont=dict(color=MUTED),zerolinecolor=GOLD+"22")
-        fig.update_layout(**lo)
+            lo[ax] = dict(gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
+                          tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
+        apply_layout(fig, lo)
         for ann in fig.layout.annotations:
             ann.font.color = GOLD; ann.font.size = 12
         st.plotly_chart(fig, use_container_width=True)
@@ -515,13 +551,13 @@ elif PAGE == "copula2":
             for v in [thresh, 1-thresh]:
                 fig.add_vline(x=v, line_dash="dot", line_color=GOLD, line_width=1)
                 fig.add_hline(y=v, line_dash="dot", line_color=GOLD, line_width=1)
-            fig.update_layout(**mp_layout(
+            apply_layout(fig, mp_layout(
                 title=f"{family} Copula — Uniform Space [0,1]²",
                 xaxis_title="U₁", yaxis_title="U₂",
-                xaxis=dict(range=[0,1],gridcolor=BLUE+"55",linecolor=GOLD+"33",
-                           tickfont=dict(color=MUTED),zerolinecolor=GOLD+"22"),
-                yaxis=dict(range=[0,1],gridcolor=BLUE+"55",linecolor=GOLD+"33",
-                           tickfont=dict(color=MUTED),zerolinecolor=GOLD+"22"),
+                xaxis=dict(range=[0,1],gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
+                           tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)"),
+                yaxis=dict(range=[0,1],gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
+                           tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)"),
                 height=440
             ))
             st.plotly_chart(fig, use_container_width=True)
@@ -590,9 +626,9 @@ elif PAGE == "copula2":
 
         lo = mp_layout(title=f"Sklar's Decomposition — Gaussian Copula (ρ={rho_sk})", height=400)
         for ax in ['xaxis','xaxis2','xaxis3','yaxis','yaxis2','yaxis3']:
-            lo[ax] = dict(gridcolor=BLUE+"55",linecolor=GOLD+"33",
-                          tickfont=dict(color=MUTED),zerolinecolor=GOLD+"22")
-        fig.update_layout(**lo)
+            lo[ax] = dict(gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
+                          tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
+        apply_layout(fig, lo)
         for ann in fig.layout.annotations:
             ann.font.color = GOLD; ann.font.size = 11
         st.plotly_chart(fig, use_container_width=True)
@@ -620,9 +656,9 @@ elif PAGE == "copula2":
                                   line=dict(color=ORANGE,width=2.5)),1,2)
         lo = mp_layout(title="Tail Dependence Coefficients", height=380)
         for ax in ['xaxis','xaxis2','yaxis','yaxis2']:
-            lo[ax] = dict(gridcolor=BLUE+"55",linecolor=GOLD+"33",
-                          tickfont=dict(color=MUTED),zerolinecolor=GOLD+"22")
-        fig.update_layout(**lo)
+            lo[ax] = dict(gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
+                          tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
+        apply_layout(fig, lo)
         for ann in fig.layout.annotations:
             ann.font.color=GOLD; ann.font.size=11
         st.plotly_chart(fig, use_container_width=True)
@@ -668,13 +704,13 @@ elif PAGE == "copula2":
             fig.add_trace(go.Scatter(x=x_range,y=y_kde,fill='tozeropy',
                                      name="Portfolio Return Distribution",
                                      line=dict(color=GOLD,width=2),
-                                     fillcolor=GOLD+"18"))
+                                     fillcolor="rgba(255,215,0,0.09)"))
             x_tail = x_range[x_range <= var99*100]
             y_tail = y_kde[x_range <= var99*100]
             fig.add_trace(go.Scatter(
                 x=np.concatenate([x_tail,[x_tail[-1],x_tail[0]]]),
                 y=np.concatenate([y_tail,[0,0]]),
-                fill='toself', fillcolor=RED+"44",
+                fill='toself', fillcolor="rgba(220,53,69,0.27)",
                 line=dict(color=RED, width=0), name="1% Tail", showlegend=True
             ))
             for val, col, nm in [
@@ -685,7 +721,7 @@ elif PAGE == "copula2":
                 fig.add_vline(x=val,line_dash="dash",line_color=col,
                               annotation_text=nm,annotation_font_color=col,
                               annotation_font_size=10)
-            fig.update_layout(**mp_layout(
+            apply_layout(fig, mp_layout(
                 title=f"{fam_s} Copula Portfolio — Return Distribution (n={n_s:,})",
                 xaxis_title="Daily Return (%)", yaxis_title="Density",
                 height=420
@@ -794,9 +830,9 @@ elif PAGE == "copula3":
                     ),1,col_i+1)
                 lo3 = mp_layout(title="3-Asset Pairwise Copulas in Uniform Space",height=420,showlegend=False)
                 for ax in ['xaxis','xaxis2','xaxis3','yaxis','yaxis2','yaxis3']:
-                    lo3[ax]=dict(range=[0,1],gridcolor=BLUE+"55",linecolor=GOLD+"33",
-                                 tickfont=dict(color=MUTED),zerolinecolor=GOLD+"22")
-                fig.update_layout(**lo3)
+                    lo3[ax]=dict(range=[0,1],gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
+                                 tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
+                apply_layout(fig, lo3, rows=1, cols=3)
                 for ann in fig.layout.annotations: ann.font.color=GOLD; ann.font.size=10
                 st.plotly_chart(fig, use_container_width=True)
 
@@ -820,8 +856,8 @@ elif PAGE == "copula3":
                 ),1,2)
                 lo_v = mp_layout(title="Verification: Target vs Empirical Correlation",height=300)
                 for ax in ['xaxis','xaxis2','yaxis','yaxis2']:
-                    lo_v[ax]=dict(gridcolor=BLUE+"55",linecolor=GOLD+"33",
-                                  tickfont=dict(color=MUTED),zerolinecolor=GOLD+"22")
+                    lo_v[ax]=dict(gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
+                                  tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
                 fig_v.update_layout(**lo_v)
                 for ann in fig_v.layout.annotations: ann.font.color=GOLD; ann.font.size=11
                 st.plotly_chart(fig_v, use_container_width=True)
@@ -938,9 +974,9 @@ elif PAGE == "cases":
             ),1,i+1)
         lo_cs = mp_layout(title="Copula Structure: Normal vs Crisis",height=320,showlegend=True)
         for ax in ['xaxis','xaxis2','yaxis','yaxis2']:
-            lo_cs[ax]=dict(range=[0,1],gridcolor=BLUE+"55",linecolor=GOLD+"33",
-                           tickfont=dict(color=MUTED),zerolinecolor=GOLD+"22")
-        fig.update_layout(**lo_cs)
+            lo_cs[ax]=dict(range=[0,1],gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
+                           tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
+        apply_layout(fig, lo_cs, rows=1, cols=2)
         for ann in fig.layout.annotations: ann.font.color=GOLD; ann.font.size=10
         st.plotly_chart(fig, use_container_width=True)
 
@@ -1028,7 +1064,7 @@ elif PAGE == "applications":
             x_app = np.linspace(Rp_app.min()*100, Rp_app.max()*100, 400)
             fig.add_trace(go.Scatter(x=x_app,y=kde_app(x_app),
                                      fill='tozeropy',name="Copula Simulation",
-                                     line=dict(color=GOLD,width=2),fillcolor=GOLD+"18"))
+                                     line=dict(color=GOLD,width=2),fillcolor="rgba(255,215,0,0.09)"))
             fig.add_trace(go.Scatter(x=x_app,
                                      y=norm.pdf(x_app,mu_par,sig_par),
                                      name="Parametric Normal",
@@ -1039,7 +1075,7 @@ elif PAGE == "applications":
             fig.add_vline(x=var99_par,line_dash="dot",line_color=LB,
                           annotation_text=f"Param VaR99: {var99_par_pct:.2f}%",
                           annotation_font_color=LB,annotation_font_size=9)
-            fig.update_layout(**mp_layout(
+            apply_layout(fig, mp_layout(
                 title="4-Asset Portfolio — Copula vs Parametric Distribution",
                 xaxis_title="Daily Return (%)",yaxis_title="Density",height=380))
             st.plotly_chart(fig, use_container_width=True)
@@ -1085,7 +1121,7 @@ elif PAGE == "applications":
             fig.add_vline(x=R_bas,line_dash="dash",line_color=GRN,
                           annotation_text=f"Basel R={R_bas:.3f}\nWCDR={wcdr_bas*100:.1f}%",
                           annotation_font_color=GRN,annotation_font_size=10)
-            fig.update_layout(**mp_layout(
+            apply_layout(fig, mp_layout(
                 title=f"WCDR vs ρ (PD={pd_cr*100:.1f}%, α={alpha_cr*100:.1f}%)",
                 xaxis_title="Asset Correlation ρ",yaxis_title="WCDR (%)",height=350))
             st.plotly_chart(fig, use_container_width=True)
@@ -1140,7 +1176,7 @@ elif PAGE == "applications":
             textposition="outside",
             textfont=dict(color=TXT,size=9)
         ))
-        fig.update_layout(**mp_layout(
+        apply_layout(fig, mp_layout(
             title="Capital Requirement Across Stress Scenarios",
             xaxis_title="Scenario",yaxis_title="Unexpected Loss / Capital (INR Crore)",
             height=400
