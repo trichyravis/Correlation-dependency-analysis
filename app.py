@@ -524,16 +524,32 @@ elif PAGE == "intro":
             },
         ]
         for crisis in crises_data:
-            with st.expander(crisis["title"], expanded=True):
-                ca, cb, cc = st.columns(3)
-                for col_st, heading, content in [
-                    (ca, "What Happened", crisis["what"]),
-                    (cb, "Correlation Evidence", crisis["corr"]),
-                    (cc, "Copula Lesson", crisis["lesson"]),
-                ]:
-                    col_st.html(f"""<div class="mp-card" style="height:100%;">
-                      <p style="color:{crisis["col"]};font-weight:700;font-size:0.9rem;margin-bottom:6px;">{heading}</p>
-                      <p style="color:{TXT};font-size:0.85rem;line-height:1.8;">{content}</p></div>""")
+            c_title  = crisis["title"]
+            c_col    = crisis["col"]
+            c_what   = crisis["what"]
+            c_corr   = crisis["corr"]
+            c_lesson = crisis["lesson"]
+            st.html(f"""
+            <div style="border:1px solid {c_col}55;border-radius:10px;margin-bottom:16px;overflow:hidden;">
+              <div style="background:{c_col}22;padding:12px 18px;border-bottom:1px solid {c_col}44;">
+                <span style="color:{c_col};font-weight:700;font-size:0.95rem;">{c_title}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:14px;">
+                <div style="background:#07101f;border-radius:8px;padding:14px;">
+                  <p style="color:{c_col};font-weight:700;font-size:0.88rem;margin-bottom:8px;">What Happened</p>
+                  <p style="color:{TXT};font-size:0.84rem;line-height:1.75;margin:0;">{c_what}</p>
+                </div>
+                <div style="background:#07101f;border-radius:8px;padding:14px;">
+                  <p style="color:{GOLD};font-weight:700;font-size:0.88rem;margin-bottom:8px;">Correlation Evidence</p>
+                  <p style="color:{TXT};font-size:0.84rem;line-height:1.75;margin:0;">{c_corr}</p>
+                </div>
+                <div style="background:#07101f;border-radius:8px;padding:14px;border-left:3px solid {GOLD};">
+                  <p style="color:{GOLD};font-weight:700;font-size:0.88rem;margin-bottom:8px;">Copula Lesson</p>
+                  <p style="color:{TXT};font-size:0.84rem;line-height:1.75;margin:0;">{c_lesson}</p>
+                </div>
+              </div>
+            </div>
+            """)
 
     with tab_li:
         st.html(f'''<div class="section-hdr">The Copula Paper That Changed Finance: David X. Li (2000)</div>''')
