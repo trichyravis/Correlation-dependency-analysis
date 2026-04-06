@@ -785,7 +785,7 @@ elif PAGE == "copula3":
                         text=[[f"{P3[i,j]:.3f}" for j in range(3)] for i in range(3)],
                         texttemplate="%{text}", textfont=dict(size=13, color="white"),
                     ))
-                    fig_p.update_layout(**mp_layout(title="Correlation Matrix P", height=280))
+                    apply_layout(fig_p, mp_layout(title="Correlation Matrix P", height=280))
                     st.plotly_chart(fig_p, use_container_width=True)
                 with c2:
                     fig_l = go.Figure(go.Heatmap(
@@ -794,7 +794,7 @@ elif PAGE == "copula3":
                         text=[[f"{L3[i,j]:.4f}" for j in range(3)] for i in range(3)],
                         texttemplate="%{text}", textfont=dict(size=11),
                     ))
-                    fig_l.update_layout(**mp_layout(title="Cholesky Factor L (P=LLᵀ)", height=280))
+                    apply_layout(fig_l, mp_layout(title="Cholesky Factor L (P=LLᵀ)", height=280))
                     st.plotly_chart(fig_l, use_container_width=True)
 
                 st.html(f"""
@@ -857,7 +857,7 @@ elif PAGE == "copula3":
                 for ax in ['xaxis','xaxis2','yaxis','yaxis2']:
                     lo_v[ax]=dict(gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
                                   tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
-                fig_v.update_layout(**lo_v)
+                apply_layout(fig_v, lo_v, rows=1, cols=2)
                 for ann in fig_v.layout.annotations: ann.font.color=GOLD; ann.font.size=11
                 st.plotly_chart(fig_v, use_container_width=True)
                 max_err = max(diff[i][j] for i in range(3) for j in range(3) if i!=j)
@@ -997,7 +997,7 @@ elif PAGE == "cases":
                        annotation_font_color=RED, annotation_font_size=9)
         fig2.add_hline(y=cs['pd']*100,line_dash="dot",line_color=MUTED,
                        annotation_text=f"PD={cs['pd']*100:.1f}%",annotation_font_color=MUTED)
-        fig2.update_layout(**mp_layout(
+        apply_layout(fig2, mp_layout(
             title=f"WCDR vs Correlation (PD={cs['pd']*100:.1f}%)",
             xaxis_title="Asset Correlation ρ",yaxis_title="WCDR (%)",
             height=320
