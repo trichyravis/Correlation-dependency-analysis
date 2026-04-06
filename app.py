@@ -700,7 +700,7 @@ elif PAGE == "copula2":
             y_kde = kde_vals(x_range)
 
             fig = go.Figure()
-            fig.add_trace(go.Scatter(x=x_range,y=y_kde,fill='tozeropy',
+            fig.add_trace(go.Scatter(x=x_range,y=y_kde,fill='tozeroy',
                                      name="Portfolio Return Distribution",
                                      line=dict(color=GOLD,width=2),
                                      fillcolor="rgba(255,215,0,0.09)"))
@@ -1062,7 +1062,7 @@ elif PAGE == "applications":
             kde_app = gaussian_kde(Rp_app*100)
             x_app = np.linspace(Rp_app.min()*100, Rp_app.max()*100, 400)
             fig.add_trace(go.Scatter(x=x_app,y=kde_app(x_app),
-                                     fill='tozeropy',name="Copula Simulation",
+                                     fill='tozeroy',name="Copula Simulation",
                                      line=dict(color=GOLD,width=2),fillcolor="rgba(255,215,0,0.09)"))
             fig.add_trace(go.Scatter(x=x_app,
                                      y=norm.pdf(x_app,mu_par,sig_par),
