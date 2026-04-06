@@ -384,9 +384,9 @@ elif PAGE == "correlation":
             rel_type = st.selectbox("Relationship Type", [
                 "Linear (ρ=0.8)", "Quadratic (non-monotone)", "Exponential (monotone)",
                 "Sine wave", "Independent", "Negative linear"
-            ])
-            n_obs = st.slider("Observations", 100, 1000, 400, 50)
-            noise = st.slider("Noise level", 0.0, 2.0, 0.3, 0.1)
+            ], key="corr_rel_type")
+            n_obs = st.slider("Observations", 100, 1000, 400, 50, key="corr_obs")
+            noise = st.slider("Noise level", 0.0, 2.0, 0.3, 0.1, key="corr_noise")
 
         np.random.seed(42)
         x = np.random.randn(n_obs)
@@ -446,7 +446,7 @@ elif PAGE == "correlation":
             [0.40, 0.38, 0.30,-0.10,  0.30, -0.20,  1.00,  0.20],
             [0.35, 0.40, 0.30, 0.05, -0.05,  0.10,  0.20,  1.00],
         ])
-        mode = st.radio("Mode", ["Normal Period", "Crisis Period (+40% equity corr)"], horizontal=True)
+        mode = st.radio("Mode", ["Normal Period", "Crisis Period (+40% equity corr)"], horizontal=True, key="corr_mode")
         if mode == "Crisis Period (+40% equity corr)":
             C_show = C.copy()
             eq_idx = [0,1,2]
@@ -475,10 +475,10 @@ elif PAGE == "correlation":
         st.html(f'<div class="section-hdr">Rolling Correlation Simulation</div>')
         col1, col2 = st.columns([1,3])
         with col1:
-            rho_normal_r = st.slider("Normal ρ", -0.9, 0.9, 0.35, 0.05)
-            rho_crisis_r  = st.slider("Crisis ρ", 0.0, 0.99, 0.88, 0.01)
-            crisis_start  = st.slider("Crisis starts (day)", 100, 350, 200)
-            window        = st.slider("Rolling window", 20, 90, 30, 5)
+            rho_normal_r = st.slider("Normal ρ", -0.9, 0.9, 0.35, 0.05, key="roll_rho_n")
+            rho_crisis_r  = st.slider("Crisis ρ", 0.0, 0.99, 0.88, 0.01, key="roll_rho_c")
+            crisis_start  = st.slider("Crisis starts (day)", 100, 350, 200, key="roll_crisis")
+            window        = st.slider("Rolling window", 20, 90, 30, 5, key="roll_window")
 
         np.random.seed(99)
         n_days = 500
@@ -530,14 +530,14 @@ elif PAGE == "copula2":
         with col1:
             family = st.selectbox("Copula Family", [
                 "Gaussian", "Student-t", "Clayton", "Gumbel"
-            ])
-            rho_c = st.slider("Correlation ρ", -0.95, 0.95, 0.65, 0.05,
+            ], key="cop2_family")
+            rho_c = st.slider("Correlation ρ", -0.95, 0.95, 0.65, 0.05, key="cop2_rho",
                               help="Applies to Gaussian and t-copula")
-            nu_c  = st.slider("Degrees of freedom ν", 2, 30, 4, 1,
+            nu_c  = st.slider("Degrees of freedom ν", 2, 30, 4, 1, key="cop2_nu",
                               help="t-copula only; lower = fatter tails")
-            theta_c = st.slider("Archimedean θ", 0.1, 8.0, 2.5, 0.1,
+            theta_c = st.slider("Archimedean θ", 0.1, 8.0, 2.5, 0.1, key="cop2_theta",
                                 help="Clayton / Gumbel parameter")
-            n_sim_c = st.select_slider("Simulations", [500,1000,2000,5000], 2000)
+            n_sim_c = st.select_slider("Simulations", [500,1000,2000,5000], 2000, key="cop2_nsim")
 
         if family == "Gaussian":   U = gaussian_copula_sample(rho_c, n_sim_c)
         elif family == "Student-t": U = t_copula_sample(rho_c, nu_c, n_sim_c)
@@ -613,8 +613,8 @@ elif PAGE == "copula2":
     with tab2:
         st.html('<div class="section-hdr">Sklar\'s Theorem — Step-by-Step Pipeline</div>')
         rho_sk = st.slider("Correlation ρ (Gaussian)", -0.9, 0.9, 0.65, 0.05, key="sk_rho")
-        marg1  = st.selectbox("Asset 1 Marginal", ["Normal", "Lognormal", "t(5)"])
-        marg2  = st.selectbox("Asset 2 Marginal", ["Lognormal", "Normal", "t(5)"], index=0)
+        marg1  = st.selectbox("Asset 1 Marginal", ["Normal", "Lognormal", "t(5)"], key="skl_marg1")
+        marg2  = st.selectbox("Asset 2 Marginal", ["Lognormal", "Normal", "t(5)"], index=0, key="skl_marg2")
 
         np.random.seed(42)
         U_sk = gaussian_copula_sample(rho_sk, 1500, seed=42)
@@ -687,12 +687,12 @@ elif PAGE == "copula2":
         st.html('<div class="section-hdr">Portfolio Risk Simulation via Copula</div>')
         col1, col2 = st.columns([1,3])
         with col1:
-            w1_s = st.slider("Weight Asset 1 (%)", 10, 90, 60, 5) / 100
+            w1_s = st.slider("Weight Asset 1 (%)", 10, 90, 60, 5, key="risk_w1") / 100
             w2_s = 1 - w1_s
-            mu1_s  = st.number_input("μ₁ (daily %)", value=0.08, step=0.01) / 100
-            sig1_s = st.number_input("σ₁ (daily %)", value=1.50, step=0.10) / 100
-            mu2_s  = st.number_input("μ₂ (daily %)", value=0.05, step=0.01) / 100
-            sig2_s = st.number_input("σ₂ (daily %)", value=1.00, step=0.10) / 100
+            mu1_s  = st.number_input("μ₁ (daily %)", value=0.08, step=0.01, key="risk_mu1") / 100
+            sig1_s = st.number_input("σ₁ (daily %)", value=1.50, step=0.10, key="risk_sig1") / 100
+            mu2_s  = st.number_input("μ₂ (daily %)", value=0.05, step=0.01, key="risk_mu2") / 100
+            sig2_s = st.number_input("σ₂ (daily %)", value=1.00, step=0.10, key="risk_sig2") / 100
             rho_s  = st.slider("Copula ρ", -0.9, 0.9, 0.55, 0.05, key="risk_rho")
             fam_s  = st.selectbox("Copula", ["Gaussian","Student-t","Clayton"], key="risk_fam")
             nu_s   = st.slider("ν (t-copula)", 2, 20, 4, 1, key="risk_nu")
@@ -764,14 +764,14 @@ elif PAGE == "copula3":
     col1, col2 = st.columns([1, 2])
     with col1:
         st.html(f'<p style="color:{GOLD};font-weight:600">Asset Correlations (Z-score space)</p>')
-        rho12 = st.slider("ρ₁₂ (Asset 1 ↔ 2)", -0.95, 0.95, 0.65, 0.05)
-        rho13 = st.slider("ρ₁₃ (Asset 1 ↔ 3)", -0.95, 0.95, 0.30, 0.05)
-        rho23 = st.slider("ρ₂₃ (Asset 2 ↔ 3)", -0.95, 0.95, -0.20, 0.05)
+        rho12 = st.slider("ρ₁₂ (Asset 1 ↔ 2)", -0.95, 0.95, 0.65, 0.05, key="c3_rho12")
+        rho13 = st.slider("ρ₁₃ (Asset 1 ↔ 3)", -0.95, 0.95, 0.30, 0.05, key="c3_rho13")
+        rho23 = st.slider("ρ₂₃ (Asset 2 ↔ 3)", -0.95, 0.95, -0.20, 0.05, key="c3_rho23")
         n3    = st.select_slider("Simulations", [500,1000,2000,5000], 2000, key="n3")
         asset_names = ["Nifty 50", "Gold", "USD/INR"]
-        asset_names[0] = st.text_input("Asset 1 name", "Nifty 50")
-        asset_names[1] = st.text_input("Asset 2 name", "Gold")
-        asset_names[2] = st.text_input("Asset 3 name", "USD/INR")
+        asset_names[0] = st.text_input("Asset 1 name", "Nifty 50", key="c3_a1")
+        asset_names[1] = st.text_input("Asset 2 name", "Gold",     key="c3_a2")
+        asset_names[2] = st.text_input("Asset 3 name", "USD/INR",  key="c3_a3")
 
     P3 = np.array([[1, rho12, rho13],
                    [rho12, 1, rho23],
@@ -948,7 +948,7 @@ elif PAGE == "cases":
     }
 
     case_names = list(cases.keys())
-    sel = st.selectbox("Select Case Study", case_names)
+    sel = st.selectbox("Select Case Study", case_names, key="case_sel")
     cs = cases[sel]
 
     st.html(f"""
@@ -1046,7 +1046,7 @@ elif PAGE == "applications":
         col1, col2 = st.columns([1,2])
         with col1:
             assets_app = ["Nifty 50","Gold","USD/INR","10Y Bond"]
-            weights_app = [st.slider(f"Weight: {a} (%)", 0, 100, w, 5)
+            weights_app = [st.slider(f"Weight: {a} (%)", 0, 100, w, 5, key=f"app_w_{a.replace(' ','_')}")
                            for a,w in zip(assets_app,[40,20,20,20])]
             tot = sum(weights_app)
             if tot != 100:
@@ -1054,7 +1054,7 @@ elif PAGE == "applications":
             w_arr = np.array(weights_app)/tot
             sigs_app = np.array([0.012, 0.008, 0.004, 0.003])
             mus_app  = np.array([0.0008, 0.0003, 0.0001, 0.0001])
-            rho_app  = st.slider("Uniform copula ρ", 0.0, 0.95, 0.40, 0.05)
+            rho_app  = st.slider("Uniform copula ρ", 0.0, 0.95, 0.40, 0.05, key="app_rho")
             n_app    = 50000
 
         np.random.seed(42)
@@ -1111,11 +1111,11 @@ elif PAGE == "applications":
         st.html('<div class="section-hdr">Credit Portfolio — Joint Default & WCDR</div>')
         col1, col2 = st.columns([1,2])
         with col1:
-            pd_cr  = st.slider("PD (%)", 0.5, 20.0, 3.0, 0.5) / 100
-            rho_cr = st.slider("Copula ρ", 0.01, 0.99, 0.15, 0.01)
-            lgd_cr = st.slider("LGD (%)", 20, 80, 45, 5) / 100
-            ead_cr = st.number_input("EAD (INR Crore)", value=1000, step=100)
-            alpha_cr = st.select_slider("Confidence α", [0.95,0.99,0.999,0.9999], 0.999)
+            pd_cr  = st.slider("PD (%)", 0.5, 20.0, 3.0, 0.5, key="cred_pd") / 100
+            rho_cr = st.slider("Copula ρ", 0.01, 0.99, 0.15, 0.01, key="cred_rho")
+            lgd_cr = st.slider("LGD (%)", 20, 80, 45, 5, key="cred_lgd") / 100
+            ead_cr = st.number_input("EAD (INR Crore)", value=1000, step=100, key="cred_ead")
+            alpha_cr = st.select_slider("Confidence α", [0.95,0.99,0.999,0.9999], 0.999, key="cred_alpha")
 
         wcdr_val = wcdr(pd_cr, rho_cr, alpha_cr)
         el_cr = pd_cr * lgd_cr * ead_cr
@@ -1163,8 +1163,8 @@ elif PAGE == "applications":
           </p>
         </div>
         """)
-        base_rho = st.slider("Base Correlation ρ", 0.0, 0.95, 0.40, 0.05)
-        pd_st = st.slider("PD (%)", 0.5, 20.0, 3.0, 0.5) / 100
+        base_rho = st.slider("Base Correlation ρ", 0.0, 0.95, 0.40, 0.05, key="stress_rho")
+        pd_st = st.slider("PD (%)", 0.5, 20.0, 3.0, 0.5, key="stress_pd") / 100
         lgd_st = 0.45; ead_st = 1000
 
         scenarios = {
@@ -1282,17 +1282,17 @@ elif PAGE == "wcdr":
 
     col1, col2 = st.columns([1, 2])
     with col1:
-        pd_w = st.slider("PD (%)", 0.10, 30.0, 3.0, 0.10) / 100
-        use_bas_r = st.checkbox("Use Basel II R formula", value=True)
+        pd_w = st.slider("PD (%)", 0.10, 30.0, 3.0, 0.10, key="wcdr_pd") / 100
+        use_bas_r = st.checkbox("Use Basel II R formula", value=True, key="wcdr_baselR")
         if use_bas_r:
             rho_w = 0.12*(1-np.exp(-50*pd_w))/(1-np.exp(-50)) + \
                     0.24*(1-(1-np.exp(-50*pd_w))/(1-np.exp(-50)))
             st.info(f"Basel II R = **{rho_w:.4f}**")
         else:
-            rho_w = st.slider("Correlation ρ", 0.01, 0.99, 0.15, 0.01)
-        lgd_w = st.slider("LGD (%)", 10, 90, 45, 5) / 100
-        maturity_w = st.slider("Maturity (years)", 1.0, 5.0, 2.5, 0.5)
-        ead_w = st.number_input("EAD (INR Crore)", value=500, step=50)
+            rho_w = st.slider("Correlation ρ", 0.01, 0.99, 0.15, 0.01, key="wcdr_rho")
+        lgd_w = st.slider("LGD (%)", 10, 90, 45, 5, key="wcdr_lgd") / 100
+        maturity_w = st.slider("Maturity (years)", 1.0, 5.0, 2.5, 0.5, key="wcdr_mat")
+        ead_w = st.number_input("EAD (INR Crore)", value=500, step=50, key="wcdr_ead")
         alpha_w = 0.999
 
     wcdr_w = wcdr(pd_w, rho_w, alpha_w)
