@@ -1840,20 +1840,68 @@ elif PAGE == "wcdr":
     df_tbl.index.name = "PD"
     st.dataframe(df_tbl, use_container_width=True)
 
-    with st.expander("📖 Excel Formula"):
-        st.code("""
-# WCDR in Excel (PD in A1, rho in B1, alpha in C1):
-=NORM.S.DIST((NORM.S.INV(A1) + SQRT(B1)*NORM.S.INV(C1)) / SQRT(1-B1), TRUE)
-
-# Basel II R formula (PD in A1):
-=0.12*(1-EXP(-50*A1))/(1-EXP(-50)) + 0.24*(1-(1-EXP(-50*A1))/(1-EXP(-50)))
-
-# Capital charge K (PD in A1, rho in B1, LGD in C1, M in D1):
-=LET(wcdr, NORM.S.DIST((NORM.S.INV(A1)+SQRT(B1)*3.090)/SQRT(1-B1),TRUE),
-     b, (0.11852-0.05478*LN(A1))^2,
-     ma, (1+(D1-2.5)*b)/(1-1.5*b),
-     C1*(wcdr-A1)*ma)
-        """, language="")
+    st.html(f"""
+    <div style="margin-top:16px;border:1px solid rgba(255,215,0,0.35);border-radius:10px;overflow:hidden;">
+      <!-- Header -->
+      <div style="background:rgba(0,51,102,0.6);padding:10px 18px;border-bottom:1px solid rgba(255,215,0,0.25);
+                  display:flex;align-items:center;gap:8px;">
+        <span style="font-size:1rem;">📖</span>
+        <span style="color:{GOLD};font-weight:700;font-size:0.92rem;font-family:Playfair Display,serif;">
+          Excel Formulas — Copy & Paste Ready
+        </span>
+      </div>
+      <!-- Formula 1 -->
+      <div style="padding:14px 18px 8px;border-bottom:1px solid rgba(0,51,102,0.5);">
+        <p style="color:{MUTED};font-size:0.78rem;font-weight:600;text-transform:uppercase;
+                  letter-spacing:1px;margin:0 0 8px;">WCDR Formula — cell inputs: PD→A1, ρ→B1, α→C1</p>
+        <div style="background:#02080f;border:1px solid rgba(0,51,102,0.8);border-radius:6px;
+                    padding:12px 16px;font-family:Consolas,Monaco,monospace;">
+          <span style="color:rgba(100,150,200,0.8);font-size:0.78rem;">&#35; Worst Case Default Rate at confidence alpha</span><br>
+          <span style="color:{GOLD};font-size:0.92rem;">
+            =NORM.S.DIST((NORM.S.INV(<span style="color:#7ec8e3;">A1</span>) + SQRT(<span style="color:#7ec8e3;">B1</span>)*NORM.S.INV(<span style="color:#7ec8e3;">C1</span>)) / SQRT(1&#8209;<span style="color:#7ec8e3;">B1</span>), TRUE)
+          </span>
+        </div>
+      </div>
+      <!-- Formula 2 -->
+      <div style="padding:14px 18px 8px;border-bottom:1px solid rgba(0,51,102,0.5);">
+        <p style="color:{MUTED};font-size:0.78rem;font-weight:600;text-transform:uppercase;
+                  letter-spacing:1px;margin:0 0 8px;">Basel II Asset Correlation R — cell input: PD→A1</p>
+        <div style="background:#02080f;border:1px solid rgba(0,51,102,0.8);border-radius:6px;
+                    padding:12px 16px;font-family:Consolas,Monaco,monospace;">
+          <span style="color:rgba(100,150,200,0.8);font-size:0.78rem;">&#35; R ∈ [0.12, 0.24] — decreases as PD increases</span><br>
+          <span style="color:{GOLD};font-size:0.88rem;">
+            =0.12*(1&#8209;EXP(&#8209;50*<span style="color:#7ec8e3;">A1</span>))/(1&#8209;EXP(&#8209;50)) + 0.24*(1&#8209;(1&#8209;EXP(&#8209;50*<span style="color:#7ec8e3;">A1</span>))/(1&#8209;EXP(&#8209;50)))
+          </span>
+        </div>
+      </div>
+      <!-- Formula 3 -->
+      <div style="padding:14px 18px 14px;">
+        <p style="color:{MUTED};font-size:0.78rem;font-weight:600;text-transform:uppercase;
+                  letter-spacing:1px;margin:0 0 8px;">Capital Charge K — PD→A1, ρ→B1, LGD→C1, Maturity→D1</p>
+        <div style="background:#02080f;border:1px solid rgba(0,51,102,0.8);border-radius:6px;
+                    padding:12px 16px;font-family:Consolas,Monaco,monospace;line-height:1.9;">
+          <span style="color:rgba(100,150,200,0.8);font-size:0.78rem;">&#35; Full IRB capital formula with maturity adjustment</span><br>
+          <span style="color:{GOLD};font-size:0.87rem;">=LET(</span><br>
+          <span style="color:{GOLD};font-size:0.87rem;">&nbsp;&nbsp;&nbsp;<span style="color:#c792ea;">wcdr</span>,&nbsp;NORM.S.DIST((NORM.S.INV(<span style="color:#7ec8e3;">A1</span>)+SQRT(<span style="color:#7ec8e3;">B1</span>)*3.090)/SQRT(1&#8209;<span style="color:#7ec8e3;">B1</span>),TRUE),</span><br>
+          <span style="color:{GOLD};font-size:0.87rem;">&nbsp;&nbsp;&nbsp;<span style="color:#c792ea;">b</span>,&nbsp;&nbsp;&nbsp;&nbsp;(0.11852&#8209;0.05478*LN(<span style="color:#7ec8e3;">A1</span>))^2,</span><br>
+          <span style="color:{GOLD};font-size:0.87rem;">&nbsp;&nbsp;&nbsp;<span style="color:#c792ea;">ma</span>,&nbsp;&nbsp;&nbsp;(1+(<span style="color:#7ec8e3;">D1</span>&#8209;2.5)*<span style="color:#c792ea;">b</span>)/(1&#8209;1.5*<span style="color:#c792ea;">b</span>),</span><br>
+          <span style="color:{GOLD};font-size:0.87rem;">&nbsp;&nbsp;&nbsp;<span style="color:#7ec8e3;">C1</span>*(<span style="color:#c792ea;">wcdr</span>&#8209;<span style="color:#7ec8e3;">A1</span>)*<span style="color:#c792ea;">ma</span>)</span>
+        </div>
+        <!-- Legend -->
+        <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap;">
+          <span style="font-size:0.78rem;color:{MUTED};">
+            <span style="color:#7ec8e3;font-weight:600;">Blue</span> = cell references (inputs)
+          </span>
+          <span style="font-size:0.78rem;color:{MUTED};">
+            <span style="color:#c792ea;font-weight:600;">Purple</span> = named variables (LET)
+          </span>
+          <span style="font-size:0.78rem;color:{MUTED};">
+            <span style="color:{GOLD};font-weight:600;">Gold</span> = formula syntax
+          </span>
+        </div>
+      </div>
+    </div>
+    """)
 
 # ══════════════════════════════════════════════════════════════
 #  FOOTER
