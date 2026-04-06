@@ -150,17 +150,28 @@ st.markdown(f"""
 # ══════════════════════════════════════════════════════════════
 PLOT_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(10,22,48,0.75)",
+    plot_bgcolor="rgba(7,16,31,0.88)",
     font=dict(family="Inter", color=TXT, size=11),
-    title_font=dict(family="Playfair Display", color=GOLD, size=14),
-    legend=dict(bgcolor="rgba(10,22,40,0.85)", bordercolor="rgba(255,215,0,0.6)", borderwidth=1,
-                font=dict(color=TXT, size=11)),
-    margin=dict(l=40, r=20, t=50, b=40),
+    title_font=dict(family="Playfair Display", color=GOLD, size=13),
+    legend=dict(
+        bgcolor="rgba(10,22,40,0.92)",
+        bordercolor="rgba(255,215,0,0.55)",
+        borderwidth=1,
+        font=dict(color=TXT, size=10),
+        itemsizing="constant",
+    ),
+    margin=dict(l=55, r=30, t=55, b=50),
+    colorway=["#FFD700","#dc3545","#28a745","#ADD8E6","#fd7e14","#6f42c1","#004d80"],
 )
 
 AXIS_STYLE = dict(
-    gridcolor="rgba(0,51,102,0.4)", linecolor="rgba(255,215,0,0.27)",
-    zerolinecolor="rgba(255,215,0,0.13)", tickfont=dict(color=MUTED),
+    gridcolor="rgba(0,51,102,0.5)",
+    linecolor="rgba(255,215,0,0.3)",
+    zerolinecolor="rgba(255,215,0,0.15)",
+    tickfont=dict(color=TXT, size=10),
+    title_font=dict(color=MUTED, size=11),
+    showgrid=True,
+    zeroline=True,
 )
 
 def mp_layout(**kwargs):
@@ -181,8 +192,14 @@ def mp_layout(**kwargs):
 def apply_layout(fig, layout_dict, rows=1, cols=1):
     """Apply layout to fig, then style all axes consistently."""
     ax_overrides = layout_dict.pop("_axis_overrides", {})
+
+    # Extract axis title overrides (xaxis_title -> title for xaxis dict)
+    x_title = ax_overrides.pop("xaxis_title", None)
+    y_title = ax_overrides.pop("yaxis_title", None)
+
     fig.update_layout(**layout_dict)
-    # Apply default axis style to every subplot axis
+
+    # Apply default axis style + any per-axis overrides to every subplot axis
     for r in range(1, rows+1):
         for c in range(1, cols+1):
             suffix = "" if (r==1 and c==1) else str((r-1)*cols + c)
@@ -190,6 +207,18 @@ def apply_layout(fig, layout_dict, rows=1, cols=1):
                 key = f"{prefix}{suffix}"
                 style = {**AXIS_STYLE, **(ax_overrides.get(key) or {})}
                 fig.update_layout(**{key: style})
+
+    # Apply axis titles to primary axes only
+    if x_title:
+        try:
+            fig.update_xaxes(title_text=x_title, title_font=dict(color=MUTED, size=11), row=1, col=1)
+        except Exception:
+            fig.update_layout(xaxis=dict(title_text=x_title, title_font=dict(color=MUTED, size=11)))
+    if y_title:
+        try:
+            fig.update_yaxes(title_text=y_title, title_font=dict(color=MUTED, size=11), row=1, col=1)
+        except Exception:
+            fig.update_layout(yaxis=dict(title_text=y_title, title_font=dict(color=MUTED, size=11)))
 
 # ══════════════════════════════════════════════════════════════
 #  HELPERS
@@ -352,7 +381,7 @@ if PAGE == "overview":
             xi_use, yi_use = r1_c, r2_c
         fig.add_trace(go.Scatter(
             x=xi_use, y=yi_use, mode='markers',
-            marker=dict(size=5, color=[GOLD, GRN, LB][i], opacity=0.6),
+            marker=dict(size=5, color=[GOLD, GRN, LB][i], opacity=0.75),
             name=lbl, showlegend=True
         ), row=1, col=i+1)
 
@@ -488,7 +517,7 @@ elif PAGE == "intro":
         mask_pre = (U_pre[:,0] < 0.05) & (U_pre[:,1] < 0.05)
         fig_pre = go.Figure()
         fig_pre.add_trace(go.Scatter(x=U_pre[:,0], y=U_pre[:,1], mode="markers",
-            marker=dict(color=BLUE, size=3, opacity=0.3), name="Joint sample"))
+            marker=dict(color=LB, size=4, opacity=0.55), name="Joint sample"))
         fig_pre.add_trace(go.Scatter(x=U_pre[mask_pre,0], y=U_pre[mask_pre,1], mode="markers",
             marker=dict(color=RED, size=9, symbol="x", line=dict(color="white", width=1)),
             name=f"Joint crashes: {mask_pre.sum()} (indep expects {int(0.05**2*2000)})"))
@@ -496,8 +525,10 @@ elif PAGE == "intro":
             fig_pre.add_vline(x=v, line_dash="dot", line_color=GOLD, line_width=1)
             fig_pre.add_hline(y=v, line_dash="dot", line_color=GOLD, line_width=1)
         apply_layout(fig_pre, mp_layout(
-            title=f"Gaussian Copula (rho={rho_pre}) - Tail Dependence = 0 Always",
-            xaxis_title="U1", yaxis_title="U2", height=360))
+            title=f"Gaussian Copula (ρ={rho_pre}) — Tail Dependence λ = 0 Always",
+            xaxis_title="U₁ = Φ(Z₁)", yaxis_title="U₂ = Φ(Z₂)", height=380))
+        fig_pre.update_xaxes(range=[-0.02, 1.02])
+        fig_pre.update_yaxes(range=[-0.02, 1.02])
         st.plotly_chart(fig_pre, use_container_width=True)
         st.info(f"Even at rho = {rho_pre}, the Gaussian copula has zero tail dependence. Joint crashes: {mask_pre.sum()} vs {int(0.05**2*2000)} expected under independence.")
 
@@ -647,8 +678,8 @@ elif PAGE == "intro":
         fig_cdo.add_trace(go.Scatter(x=rho_pts_cdo, y=eq_l_c, name="Equity (>3% loss)", line=dict(color=RED, width=2.5), mode="lines+markers"))
         fig_cdo.add_trace(go.Scatter(x=rho_pts_cdo, y=mz_l_c, name="Mezzanine (>7%)", line=dict(color=ORANGE, width=2.5), mode="lines+markers"))
         fig_cdo.add_trace(go.Scatter(x=rho_pts_cdo, y=sr_l_c, name="Senior AAA (>12%)", line=dict(color=BLUE, width=2.5), mode="lines+markers"))
-        fig_cdo.add_vline(x=rho_cdo, line_dash="dash", line_color=GOLD, annotation_text=f"Li model rho={rho_cdo}", annotation_font_color=GOLD, annotation_font_size=10)
-        fig_cdo.add_vline(x=0.75, line_dash="dash", line_color=RED, annotation_text="Crisis rho 0.75+", annotation_font_color=RED, annotation_font_size=10)
+        fig_cdo.add_vline(x=rho_cdo, line_dash="dash", line_color=GOLD, annotation_text=f"Li model<br>rho={rho_cdo}", annotation_font_color=GOLD, annotation_font_size=10, annotation_yshift=20)
+        fig_cdo.add_vline(x=0.75, line_dash="dash", line_color=RED, annotation_text="Crisis<br>rho=0.75+", annotation_font_color=RED, annotation_font_size=10, annotation_yshift=40)
         apply_layout(fig_cdo, mp_layout(title="CDO Tranche Loss Probability vs Asset Correlation", xaxis_title="Correlation rho", yaxis_title="Tranche Loss Probability", height=380))
         st.plotly_chart(fig_cdo, use_container_width=True)
         closest_i = min(range(len(rho_pts_cdo)), key=lambda i: abs(rho_pts_cdo[i]-rho_cdo))
@@ -805,10 +836,12 @@ elif PAGE == "intro":
             X_fd1 = stats.skewnorm.ppf(U_fd[:,0], a=4, loc=0.001, scale=0.012)
             X_fd2 = stats.t.ppf(U_fd[:,1], df=4, loc=0.0005, scale=0.009)
             fig_fd = make_subplots(1, 2, subplot_titles=["Copula Space (uniform)", "Output (mixed marginals)"])
-            fig_fd.add_trace(go.Scatter(x=U_fd[:,0], y=U_fd[:,1], mode="markers", marker=dict(color=GOLD, size=3, opacity=0.35), name="Copula"), 1, 1)
-            fig_fd.add_trace(go.Scatter(x=X_fd1, y=X_fd2, mode="markers", marker=dict(color=LB, size=3, opacity=0.35), name="Skewed-t margins"), 1, 2)
+            fig_fd.add_trace(go.Scatter(x=U_fd[:,0], y=U_fd[:,1], mode="markers", marker=dict(color=GOLD, size=4, opacity=0.65), name="Copula"), 1, 1)
+            fig_fd.add_trace(go.Scatter(x=X_fd1, y=X_fd2, mode="markers", marker=dict(color=LB, size=4, opacity=0.65), name="Skewed-t margins"), 1, 2)
             apply_layout(fig_fd, mp_layout(title=f"Same Copula (rho={rho_found}), Different Marginals", height=300), rows=1, cols=2)
-            for ann in fig_fd.layout.annotations: ann.font.color = GOLD; ann.font.size = 10
+            for ann in fig_fd.layout.annotations: ann.font.color = GOLD; ann.font.size = 11
+            fig_fd.update_xaxes(range=[-0.02, 1.02], col=1)
+            fig_fd.update_yaxes(range=[-0.02, 1.02], col=1)
             st.plotly_chart(fig_fd, use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════
@@ -848,7 +881,7 @@ elif PAGE == "correlation":
             fig = go.Figure()
             fig.add_trace(go.Scatter(
                 x=x, y=y, mode='markers',
-                marker=dict(color=GOLD, size=5, opacity=0.6,
+                marker=dict(color=GOLD, size=5, opacity=0.80,
                             line=dict(color=BLUE, width=0.3)),
                 name="Data"
             ))
@@ -943,11 +976,11 @@ elif PAGE == "correlation":
         fig.add_trace(go.Scatter(x=list(range(window,n_days)), y=roll_corr,
                                  fill='tozeroy', name="Rolling ρ",
                                  line=dict(color=RED,width=2.5),
-                                 fillcolor="rgba(220,53,69,0.25)"),2,1)
+                                 fillcolor="rgba(220,53,69,0.3)"),2,1)
         fig.add_vline(x=crisis_start, line_dash="dash", line_color=GOLD,
                       annotation_text="Crisis Start", annotation_font_color=GOLD)
         lo = mp_layout(title="Dynamic Correlation — Regime Change Simulation",
-                       height=480, showlegend=True)
+                       height=500, showlegend=True)
         for ax in ['xaxis','xaxis2','yaxis','yaxis2']:
             lo[ax] = dict(gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
                           tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
@@ -995,7 +1028,7 @@ elif PAGE == "copula2":
             fig.add_trace(go.Scatter(
                 x=U[~mask_ll & ~mask_uu, 0], y=U[~mask_ll & ~mask_uu, 1],
                 mode='markers', name="Joint sample",
-                marker=dict(color=BLUE, size=4, opacity=0.35)
+                marker=dict(color=LB, size=5, opacity=0.60)
             ))
             fig.add_trace(go.Scatter(
                 x=U[mask_ll,0], y=U[mask_ll,1], mode='markers',
@@ -1014,13 +1047,12 @@ elif PAGE == "copula2":
                 fig.add_hline(y=v, line_dash="dot", line_color=GOLD, line_width=1)
             apply_layout(fig, mp_layout(
                 title=f"{family} Copula — Uniform Space [0,1]²",
-                xaxis_title="U₁", yaxis_title="U₂",
-                xaxis=dict(range=[0,1],gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
-                           tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)"),
-                yaxis=dict(range=[0,1],gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
-                           tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)"),
-                height=440
-            ))
+                xaxis_title="U₁", yaxis_title="U₂", height=460,
+                legend=dict(bgcolor="rgba(10,22,40,0.9)", bordercolor="rgba(255,215,0,0.5)",
+                            borderwidth=1, font=dict(color=TXT, size=10),
+                            x=0.55, y=0.98, xanchor="left", yanchor="top")))
+            fig.update_xaxes(range=[-0.02, 1.02])
+            fig.update_yaxes(range=[-0.02, 1.02])
             st.plotly_chart(fig, use_container_width=True)
 
         m1, m2, m3, m4 = st.columns(4)
@@ -1085,13 +1117,16 @@ elif PAGE == "copula2":
                 marker=dict(color=col,size=3,opacity=0.4), name=nm
             ), 1, i+1)
 
-        lo = mp_layout(title=f"Sklar's Decomposition — Gaussian Copula (ρ={rho_sk})", height=400)
+        lo = mp_layout(title=f"Sklar's Decomposition — Gaussian Copula (ρ={rho_sk})", height=420)
         for ax in ['xaxis','xaxis2','xaxis3','yaxis','yaxis2','yaxis3']:
             lo[ax] = dict(gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
                           tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
         apply_layout(fig, lo)
         for ann in fig.layout.annotations:
             ann.font.color = GOLD; ann.font.size = 11
+                # Fix copula panel range [0,1]
+        fig.update_xaxes(range=[-0.02, 1.02], col=2)
+        fig.update_yaxes(range=[-0.02, 1.02], col=2)
         st.plotly_chart(fig, use_container_width=True)
         st.success(f"✅ Empirical correlation in copula space: **{np.corrcoef(U_sk[:,0],U_sk[:,1])[0,1]:.3f}** | Final output: **{np.corrcoef(X1,X2)[0,1]:.3f}**")
 
@@ -1121,8 +1156,11 @@ elif PAGE == "copula2":
             lo[ax] = dict(gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
                           tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
         apply_layout(fig, lo, rows=1, cols=2)
+        fig.update_yaxes(range=[-0.05, 1.05])
+        fig.update_xaxes(range=[-1.02, 1.02], col=1)  # rho range for t-copula panel
+        fig.update_xaxes(range=[0, 8.2], col=2)        # theta range for Archimedean panel
         for ann in fig.layout.annotations:
-            ann.font.color=GOLD; ann.font.size=11
+            ann.font.color=GOLD; ann.font.size = 11
         st.plotly_chart(fig, use_container_width=True)
 
     with tab4:
@@ -1282,7 +1320,7 @@ elif PAGE == "copula3":
                     mask_ll = (U3[:,i]<0.05)&(U3[:,j]<0.05)
                     fig.add_trace(go.Scatter(
                         x=U3[:,i],y=U3[:,j],mode='markers',
-                        marker=dict(color=col,size=4,opacity=0.4),
+                        marker=dict(color=col,size=5,opacity=0.75),
                         name=f"{asset_names[i]}↔{asset_names[j]}"
                     ),1,col_i+1)
                     fig.add_trace(go.Scatter(
@@ -1295,7 +1333,9 @@ elif PAGE == "copula3":
                     lo3[ax]=dict(range=[0,1],gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
                                  tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
                 apply_layout(fig, lo3, rows=1, cols=3)
-                for ann in fig.layout.annotations: ann.font.color=GOLD; ann.font.size=10
+                fig.update_xaxes(range=[-0.02, 1.02])
+                fig.update_yaxes(range=[-0.02, 1.02])
+                for ann in fig.layout.annotations: ann.font.color=GOLD; ann.font.size = 11
                 st.plotly_chart(fig, use_container_width=True)
 
             with tab_c:
@@ -1307,21 +1347,23 @@ elif PAGE == "copula3":
                     colorscale=[[0,'#8B0000'],[0.5,'#112240'],[1,'#FFD700']],
                     zmin=-1,zmax=1,
                     text=[[f"{emp[i][j]:.3f}" for j in range(3)] for i in range(3)],
-                    texttemplate="%{text}",textfont=dict(size=13, color="white")
+                    texttemplate="%{text}",textfont=dict(size=13, color="white"),
+                    colorbar=dict(tickfont=dict(color=TXT,size=9),thickness=10)
                 ),1,1)
                 fig_v.add_trace(go.Heatmap(
                     z=diff,x=asset_names,y=asset_names,
                     colorscale=[[0,GRN],[0.5,ORANGE],[1,RED]],
                     zmin=0,zmax=0.1,
                     text=[[f"{diff[i][j]:.4f}" for j in range(3)] for i in range(3)],
-                    texttemplate="%{text}",textfont=dict(size=13, color="white")
+                    texttemplate="%{text}",textfont=dict(size=13, color="white"),
+                    colorbar=dict(tickfont=dict(color=TXT,size=9),thickness=10)
                 ),1,2)
                 lo_v = mp_layout(title="Verification: Target vs Empirical Correlation",height=300)
                 for ax in ['xaxis','xaxis2','yaxis','yaxis2']:
                     lo_v[ax]=dict(gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
                                   tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
                 apply_layout(fig_v, lo_v, rows=1, cols=2)
-                for ann in fig_v.layout.annotations: ann.font.color=GOLD; ann.font.size=11
+                for ann in fig_v.layout.annotations: ann.font.color=GOLD; ann.font.size = 11
                 st.plotly_chart(fig_v, use_container_width=True)
                 max_err = max(diff[i][j] for i in range(3) for j in range(3) if i!=j)
                 if max_err < 0.03:
@@ -1426,7 +1468,7 @@ elif PAGE == "cases":
             mask_ll = (U[:,0]<0.05)&(U[:,1]<0.05)
             fig.add_trace(go.Scatter(
                 x=U[:,0],y=U[:,1],mode='markers',
-                marker=dict(color=col,size=4,opacity=0.3),
+                marker=dict(color=col,size=5,opacity=0.75),
                 name=["Normal","Crisis"][i]
             ),1,i+1)
             fig.add_trace(go.Scatter(
@@ -1434,12 +1476,12 @@ elif PAGE == "cases":
                 marker=dict(color=RED,size=9,symbol='x',line=dict(color='white',width=1)),
                 name=f"Joint crashes: {mask_ll.sum()}",showlegend=i==1
             ),1,i+1)
-        lo_cs = mp_layout(title="Copula Structure: Normal vs Crisis",height=320,showlegend=True)
+        lo_cs = mp_layout(title="Copula Structure: Normal vs Crisis",height=340,showlegend=True)
         for ax in ['xaxis','xaxis2','yaxis','yaxis2']:
-            lo_cs[ax]=dict(range=[0,1],gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
+            lo_cs[ax]=dict(range=[-0.02,1.02],gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
                            tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
         apply_layout(fig, lo_cs, rows=1, cols=2)
-        for ann in fig.layout.annotations: ann.font.color=GOLD; ann.font.size=10
+        for ann in fig.layout.annotations: ann.font.color=GOLD; ann.font.size = 11
         st.plotly_chart(fig, use_container_width=True)
 
         # WCDR comparison
@@ -1453,11 +1495,11 @@ elif PAGE == "cases":
             name="WCDR at 99.9%", line=dict(color=GOLD,width=2.5)
         ))
         fig2.add_vline(x=cs['rho_normal'],line_dash="dash",line_color=GRN,
-                       annotation_text=f"Normal ρ={cs['rho_normal']}\nWCDR={wcdr_n*100:.1f}%",
-                       annotation_font_color=GRN, annotation_font_size=9)
+                       annotation_text=f"Normal ρ={cs['rho_normal']}<br>WCDR={wcdr_n*100:.1f}%",
+                       annotation_font_color=GRN, annotation_font_size=10)
         fig2.add_vline(x=cs['rho_crisis'],line_dash="dash",line_color=RED,
-                       annotation_text=f"Crisis ρ={cs['rho_crisis']}\nWCDR={wcdr_c*100:.1f}%",
-                       annotation_font_color=RED, annotation_font_size=9)
+                       annotation_text=f"Crisis ρ={cs['rho_crisis']}<br>WCDR={wcdr_c*100:.1f}%",
+                       annotation_font_color=RED, annotation_font_size=10)
         fig2.add_hline(y=cs['pd']*100,line_dash="dot",line_color=MUTED,
                        annotation_text=f"PD={cs['pd']*100:.1f}%",annotation_font_color=MUTED)
         apply_layout(fig2, mp_layout(
@@ -1533,10 +1575,10 @@ elif PAGE == "applications":
                                      line=dict(color=LB,width=2,dash="dash")))
             fig.add_vline(x=var99_a,line_dash="dash",line_color=RED,
                           annotation_text=f"Copula VaR99: {abs(var99_a):.2f}%",
-                          annotation_font_color=RED,annotation_font_size=9)
+                          annotation_font_color=RED,annotation_font_size=10)
             fig.add_vline(x=var99_par,line_dash="dot",line_color=LB,
                           annotation_text=f"Param VaR99: {var99_par_pct:.2f}%",
-                          annotation_font_color=LB,annotation_font_size=9)
+                          annotation_font_color=LB,annotation_font_size=10)
             apply_layout(fig, mp_layout(
                 title="4-Asset Portfolio — Copula vs Parametric Distribution",
                 xaxis_title="Daily Return (%)",yaxis_title="Density",height=380))
@@ -1766,13 +1808,14 @@ elif PAGE == "wcdr":
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             scene=dict(
-                xaxis=dict(title="ρ (%)",gridcolor="rgba(0,51,102,0.6)",
-                           tickfont=dict(color=TXT),title_font=dict(color=GOLD)),
+                xaxis=dict(title="Correlation ρ (%)",gridcolor="rgba(0,51,102,0.6)",
+                           tickfont=dict(color=TXT),title_font=dict(color=GOLD),range=[5,50]),
                 yaxis=dict(title="PD (%)",gridcolor="rgba(0,51,102,0.6)",
-                           tickfont=dict(color=TXT),title_font=dict(color=GOLD)),
+                           tickfont=dict(color=TXT),title_font=dict(color=GOLD),range=[0.5,25]),
                 zaxis=dict(title="WCDR (%)",gridcolor="rgba(0,51,102,0.6)",
-                           tickfont=dict(color=TXT),title_font=dict(color=GOLD)),
+                           tickfont=dict(color=TXT),title_font=dict(color=GOLD),range=[0,100]),
                 bgcolor="rgba(7,16,31,0.9)",
+                camera=dict(eye=dict(x=1.6, y=1.6, z=0.8)),
             ),
             title=dict(text="WCDR Surface (α=99.9%)",font=dict(color=GOLD,family="Playfair Display",size=14)),
             font=dict(color=TXT), height=420, margin=dict(l=0,r=0,t=50,b=0)
