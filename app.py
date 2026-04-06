@@ -46,7 +46,11 @@ st.markdown(f"""
   .stApp > header {{ background: transparent !important; }}
 
   /* ── Typography ── */
-  html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; color: {TXT}; }}
+  html, body, [class*="css"], [class*="st-"] {{ font-family: 'Inter', sans-serif; color: {TXT}; }}
+  * {{ -webkit-font-smoothing: antialiased; }}
+  .stMarkdown, .stMarkdown p, .stMarkdown span {{ color:{TXT} !important; }}
+  div[data-testid="stVerticalBlock"] p {{ color:{TXT} !important; }}
+  div[data-testid="column"] p {{ color:{TXT} !important; }}
 
   /* ── Sidebar ── */
   .sidebar-logo {{ text-align:center; padding:18px 0 8px; }}
@@ -56,8 +60,8 @@ st.markdown(f"""
 
   /* ── Cards ── */
   .mp-card {{
-    background: linear-gradient(135deg,{CARD},{MID}22);
-    border: 1px solid {GOLD}33; border-radius:12px;
+    background: linear-gradient(135deg,{CARD},rgba(0,77,128,0.13));
+    border: 1px solid rgba(255,215,0,0.2); border-radius:12px;
     padding:22px; margin:8px 0;
   }}
   .mp-card-accent {{ border-left:4px solid {GOLD}; }}
@@ -115,9 +119,25 @@ st.markdown(f"""
   section[data-testid="stSidebar"] p {{
     color:{TXT} !important; -webkit-text-fill-color:{TXT} !important;
   }}
-  div[data-testid="metric-container"] {{ background:{CARD}; border:1px solid {GOLD}33; border-radius:8px; padding:12px; }}
-  div[data-testid="metric-container"] label {{ color:{MUTED}; }}
-  div[data-testid="metric-container"] div[data-testid="stMetricValue"] {{ color:{GOLD}; }}
+  div[data-testid="metric-container"] {{
+    background:{CARD} !important; border:1px solid rgba(255,215,0,0.2) !important;
+    border-radius:8px !important; padding:12px !important;
+  }}
+  div[data-testid="metric-container"] label,
+  div[data-testid="metric-container"] [data-testid="stMetricLabel"],
+  div[data-testid="metric-container"] [data-testid="stMetricLabel"] p,
+  div[data-testid="metric-container"] [data-testid="stMetricLabel"] div {{
+    color:{MUTED} !important; -webkit-text-fill-color:{MUTED} !important; font-size:0.78rem !important;
+  }}
+  div[data-testid="metric-container"] div[data-testid="stMetricValue"],
+  div[data-testid="metric-container"] div[data-testid="stMetricValue"] span,
+  div[data-testid="metric-container"] div[data-testid="stMetricValue"] div {{
+    color:{GOLD} !important; -webkit-text-fill-color:{GOLD} !important;
+    font-family:'Playfair Display',serif !important; font-size:1.6rem !important;
+  }}
+  div[data-testid="stMetricDelta"] {{
+    color:{TXT} !important; -webkit-text-fill-color:{TXT} !important;
+  }}
   .stExpander {{ background:{CARD}; border:1px solid {GOLD}22; border-radius:8px; }}
   .stExpander summary {{ color:{GOLD}; }}
   .stAlert {{ border-radius:8px; }}
@@ -130,11 +150,11 @@ st.markdown(f"""
 # ══════════════════════════════════════════════════════════════
 PLOT_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(17,34,64,0.6)",
+    plot_bgcolor="rgba(10,22,48,0.75)",
     font=dict(family="Inter", color=TXT, size=11),
     title_font=dict(family="Playfair Display", color=GOLD, size=14),
-    legend=dict(bgcolor="rgba(0,0,0,0.4)", bordercolor="rgba(255,215,0,0.27)", borderwidth=1,
-                font=dict(color=TXT)),
+    legend=dict(bgcolor="rgba(10,22,40,0.85)", bordercolor="rgba(255,215,0,0.6)", borderwidth=1,
+                font=dict(color=TXT, size=11)),
     margin=dict(l=40, r=20, t=50, b=40),
 )
 
@@ -441,7 +461,7 @@ elif PAGE == "correlation":
             colorscale=[[0,'#8B0000'],[0.5,'#112240'],[1,'#FFD700']],
             zmin=-1, zmax=1,
             text=[[f"{C_show[i,j]:.2f}" for j in range(8)] for i in range(8)],
-            texttemplate="%{text}", textfont=dict(size=10),
+            texttemplate="%{text}", textfont=dict(size=10, color="white"),
             hoverongaps=False,
         ))
         apply_layout(fig, mp_layout(
@@ -480,8 +500,8 @@ elif PAGE == "correlation":
         fig.add_trace(go.Scatter(x=days, y=r2_a*100, name="Asset 2", line=dict(color=LB,width=1)),1,1)
         fig.add_trace(go.Scatter(x=list(range(window,n_days)), y=roll_corr,
                                  fill='tozeroy', name="Rolling ρ",
-                                 line=dict(color=RED,width=2),
-                                 fillcolor="rgba(220,53,69,0.13)"),2,1)
+                                 line=dict(color=RED,width=2.5),
+                                 fillcolor="rgba(220,53,69,0.25)"),2,1)
         fig.add_vline(x=crisis_start, line_dash="dash", line_color=GOLD,
                       annotation_text="Crisis Start", annotation_font_color=GOLD)
         lo = mp_layout(title="Dynamic Correlation — Regime Change Simulation",
@@ -640,8 +660,9 @@ elif PAGE == "copula2":
 
         td_t   = [2*stats.t.sf(np.sqrt((nu_td+1)*(1-r)/(1+r+1e-9)), df=nu_td+1) for r in rho_range]
         theta_r= np.linspace(0.1, 8, 200)
+        theta_gum = np.linspace(1.01, 8, 200)   # Gumbel requires theta >= 1
         td_cla = 2**(-1/theta_r)
-        td_gum = 2 - 2**(1/theta_r)
+        td_gum = 2 - 2**(1/theta_gum)
 
         fig = make_subplots(1,2,subplot_titles=[
             "t-Copula vs Gaussian Tail Dep","Clayton vs Gumbel Tail Dep"])
@@ -651,13 +672,13 @@ elif PAGE == "copula2":
                                   line=dict(color=GOLD,width=1.5,dash="dash")),1,1)
         fig.add_trace(go.Scatter(x=theta_r,y=td_cla,name="Clayton λ_L",
                                   line=dict(color=GRN,width=2.5)),1,2)
-        fig.add_trace(go.Scatter(x=theta_r,y=td_gum,name="Gumbel λ_U",
+        fig.add_trace(go.Scatter(x=theta_gum,y=td_gum,name="Gumbel λ_U",
                                   line=dict(color=ORANGE,width=2.5)),1,2)
         lo = mp_layout(title="Tail Dependence Coefficients", height=380)
         for ax in ['xaxis','xaxis2','yaxis','yaxis2']:
             lo[ax] = dict(gridcolor="rgba(0,51,102,0.33)",linecolor="rgba(255,215,0,0.2)",
                           tickfont=dict(color=MUTED),zerolinecolor="rgba(255,215,0,0.13)")
-        apply_layout(fig, lo)
+        apply_layout(fig, lo, rows=1, cols=2)
         for ann in fig.layout.annotations:
             ann.font.color=GOLD; ann.font.size=11
         st.plotly_chart(fig, use_container_width=True)
@@ -792,7 +813,7 @@ elif PAGE == "copula3":
                         z=L3, x=["c1","c2","c3"], y=[asset_names[0],asset_names[1],asset_names[2]],
                         colorscale=[[0,'#112240'],[0.5,'#004d80'],[1,'#FFD700']],
                         text=[[f"{L3[i,j]:.4f}" for j in range(3)] for i in range(3)],
-                        texttemplate="%{text}", textfont=dict(size=11),
+                        texttemplate="%{text}", textfont=dict(size=11, color="white"),
                     ))
                     apply_layout(fig_l, mp_layout(title="Cholesky Factor L (P=LLᵀ)", height=280))
                     st.plotly_chart(fig_l, use_container_width=True)
@@ -844,14 +865,14 @@ elif PAGE == "copula3":
                     colorscale=[[0,'#8B0000'],[0.5,'#112240'],[1,'#FFD700']],
                     zmin=-1,zmax=1,
                     text=[[f"{emp[i][j]:.3f}" for j in range(3)] for i in range(3)],
-                    texttemplate="%{text}",textfont=dict(size=13)
+                    texttemplate="%{text}",textfont=dict(size=13, color="white")
                 ),1,1)
                 fig_v.add_trace(go.Heatmap(
                     z=diff,x=asset_names,y=asset_names,
                     colorscale=[[0,GRN],[0.5,ORANGE],[1,RED]],
                     zmin=0,zmax=0.1,
                     text=[[f"{diff[i][j]:.4f}" for j in range(3)] for i in range(3)],
-                    texttemplate="%{text}",textfont=dict(size=13)
+                    texttemplate="%{text}",textfont=dict(size=13, color="white")
                 ),1,2)
                 lo_v = mp_layout(title="Verification: Target vs Empirical Correlation",height=300)
                 for ax in ['xaxis','xaxis2','yaxis','yaxis2']:
@@ -1180,6 +1201,7 @@ elif PAGE == "applications":
             xaxis_title="Scenario",yaxis_title="Unexpected Loss / Capital (INR Crore)",
             height=400
         ))
+        fig.update_traces(textfont=dict(color=TXT, size=9))
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(df_stress.round(3), use_container_width=True,
                      column_config={"UL (INR Cr)": st.column_config.NumberColumn(format="%.1f"),
@@ -1302,10 +1324,13 @@ elif PAGE == "wcdr":
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             scene=dict(
-                xaxis=dict(title="ρ (%)",gridcolor=BLUE,tickfont=dict(color=MUTED)),
-                yaxis=dict(title="PD (%)",gridcolor=BLUE,tickfont=dict(color=MUTED)),
-                zaxis=dict(title="WCDR (%)",gridcolor=BLUE,tickfont=dict(color=MUTED)),
-                bgcolor="rgba(7,16,31,0.8)",
+                xaxis=dict(title="ρ (%)",gridcolor="rgba(0,51,102,0.6)",
+                           tickfont=dict(color=TXT),title_font=dict(color=GOLD)),
+                yaxis=dict(title="PD (%)",gridcolor="rgba(0,51,102,0.6)",
+                           tickfont=dict(color=TXT),title_font=dict(color=GOLD)),
+                zaxis=dict(title="WCDR (%)",gridcolor="rgba(0,51,102,0.6)",
+                           tickfont=dict(color=TXT),title_font=dict(color=GOLD)),
+                bgcolor="rgba(7,16,31,0.9)",
             ),
             title=dict(text="WCDR Surface (α=99.9%)",font=dict(color=GOLD,family="Playfair Display",size=14)),
             font=dict(color=TXT), height=420, margin=dict(l=0,r=0,t=50,b=0)
