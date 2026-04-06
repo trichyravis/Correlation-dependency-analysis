@@ -246,6 +246,7 @@ st.sidebar.markdown('<div class="nav-label">Navigation</div>', unsafe_allow_html
 
 pages = {
     "🏠 Overview": "overview",
+    "📖 Introduction & History": "intro",
     "📐 Correlation Explorer": "correlation",
     "🔗 Copula Lab — 2 Assets": "copula2",
     "🔺 Copula Lab — 3 Assets": "copula3",
@@ -368,6 +369,431 @@ if PAGE == "overview":
     st.plotly_chart(fig, use_container_width=True)
 
     st.info("💡 **Key insight:** Two datasets can have identical Pearson correlation but completely different joint behaviour — especially in the tails. Copulas separate the marginal distributions from the dependence structure.")
+
+
+# ══════════════════════════════════════════════════════════════
+#  PAGE: INTRODUCTION & HISTORY
+# ══════════════════════════════════════════════════════════════
+elif PAGE == "intro":
+    st.html(f'''<div class="page-title">Introduction &amp; History of Copulas</div>''')
+    st.html(f'''<div class="page-sub">From Markowitz (1952) to Basel III &mdash; How Crises Built the Copula Framework</div>''')
+
+    tab_int, tab_pre, tab_warn, tab_li, tab_cdo, tab_aft, tab_skl, tab_found = st.tabs([
+        "📋 Why This Matters", "📊 Pre-Copula Era", "⚡ Warning Shots",
+        "📄 Li (2000) Paper", "🏦 CDO Boom & Flaw", "🔥 2008 & Aftermath",
+        "🧮 Sklar Theorem", "🔬 Copula Foundations",
+    ])
+
+    with tab_int:
+        c1, c2 = st.columns([3, 2])
+        with c1:
+            st.html(f"""
+            <div class="mp-card mp-card-accent">
+              <p style="color:{GOLD};font-family:Playfair Display,serif;font-size:1.15rem;font-weight:700;margin-bottom:10px;">The Central Question of Financial Risk</p>
+              <p style="color:{TXT};line-height:1.9;font-size:0.92rem;">
+              Finance has always rested on one deceptively simple question:
+              <b style="color:{GOLD}">what happens to my portfolio when everything goes wrong at once?</b>
+              For most of the twentieth century, that question was answered with a single number &mdash; correlation &mdash;
+              embedded inside a Gaussian distribution. That answer, as 1987, 1998, and 2008 demonstrated,
+              was <b style="color:{RED}">catastrophically incomplete.</b>
+              </p>
+              <p style="color:{TXT};line-height:1.9;font-size:0.92rem;margin-top:10px;">
+              Copulas emerged as the mathematical response. They separate two questions that standard
+              correlation silently conflates: <i>how does each asset behave on its own?</i> and
+              <i>how do the assets move in relation to each other?</i>
+              </p>
+            </div>
+            <div class="mp-card" style="margin-top:12px;">
+              <p style="color:{GOLD};font-weight:700;margin-bottom:8px;">Module Contents</p>
+              <ul style="color:{TXT};font-size:0.88rem;line-height:2.1;list-style:none;padding:0;">
+                <li>📊 <b style="color:{GOLD}">Pre-Copula Era (1952-1994)</b> - Markowitz, Black-Scholes, RiskMetrics and the Gaussian illusion</li>
+                <li>⚡ <b style="color:{GOLD}">Warning Shots</b> - Black Monday (1987), Asian Crisis (1997), LTCM collapse (1998)</li>
+                <li>📄 <b style="color:{GOLD}">The Li Paper (2000)</b> - How one equation changed structured finance forever</li>
+                <li>🏦 <b style="color:{GOLD}">CDO Boom & Fatal Flaw (2000-2008)</b> - Zero tail dependence and the rating agency failure</li>
+                <li>🔥 <b style="color:{GOLD}">2008 Crisis & Aftermath</b> - Basel III, FRTB, and the new paradigm</li>
+                <li>🧮 <b style="color:{GOLD}">Sklar Theorem (1959)</b> - The mathematics that predated the finance by 40 years</li>
+                <li>🔬 <b style="color:{GOLD}">Copula Foundations</b> - What a copula is and why correlation is insufficient</li>
+              </ul>
+            </div>
+            """)
+        with c2:
+            milestones = [
+                ("1952","Markowitz","Mean-variance framework born",BLUE),
+                ("1973","Black-Scholes","Options pricing; Gaussian world peaks",MID),
+                ("1987","Black Monday","Correlations surge to 0.95+",RED),
+                ("1994","RiskMetrics","VaR becomes industry standard",MID),
+                ("1998","LTCM","Correlation diverges, not converges",RED),
+                ("2000","Li Copula","Gaussian copula adopted for CDOs",GOLD),
+                ("2008","GFC","Copula blamed; trillions lost",RED),
+                ("2010","Basel III","Stressed correlations mandated",GRN),
+                ("2016","FRTB","CVaR replaces VaR; copulas central",GRN),
+            ]
+            for year, event, desc, col in milestones:
+                txt_col = BLUE if col == GOLD else TXT
+                st.html(f"""<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;">
+                  <div style="min-width:42px;background:{col};color:{txt_col};border-radius:6px;
+                    padding:3px 6px;font-size:0.72rem;font-weight:700;text-align:center;">{year}</div>
+                  <div><div style="color:{GOLD};font-size:0.82rem;font-weight:600;">{event}</div>
+                  <div style="color:{MUTED};font-size:0.75rem;">{desc}</div></div></div>""")
+
+    with tab_pre:
+        st.html(f'''<div class="section-hdr">The Pre-Copula Era: Correlation and Its Comfortable Illusion</div>''')
+        c1, c2 = st.columns(2)
+        with c1:
+            st.html(f"""
+            <div class="mp-card mp-card-accent">
+              <p style="color:{GOLD};font-weight:700;font-size:1rem;">Markowitz & MPT (1952)</p>
+              <p style="color:{TXT};font-size:0.88rem;line-height:1.85;">
+              The covariance matrix Σ captured how assets moved together. The entire edifice rested on:
+              <b style="color:{GOLD}">returns are jointly normally distributed.</b>
+              Under joint normality, the correlation matrix fully specifies the dependence structure
+              in the centre of the distribution <i>and in the tails.</i>
+              This makes the Gaussian world tractable, and <b style="color:{RED}">dangerously misleading.</b>
+              </p>
+            </div>
+            <div class="mp-card" style="margin-top:12px;">
+              <p style="color:{GOLD};font-weight:700;font-size:1rem;">Black-Scholes-Merton (1973)</p>
+              <p style="color:{TXT};font-size:0.88rem;line-height:1.85;">
+              BSM embedded the Gaussian assumption even more deeply. Log-returns are normally distributed,
+              volatility is constant, no jumps. This powered the entire modern derivatives industry and
+              underpinned every major bank risk system by the 1980s.
+              </p>
+            </div>
+            """)
+        with c2:
+            st.html(f"""
+            <div class="mp-card">
+              <p style="color:{GOLD};font-weight:700;font-size:1rem;">J.P. Morgan RiskMetrics & VaR (1994)</p>
+              <div style="background:#07101f;border-radius:8px;padding:12px;margin:10px 0;text-align:center;">
+                <code style="color:{GOLD};font-size:0.95rem;">VaR_alpha = mu_P - z_alpha * sigma_P</code><br>
+                <code style="color:{LB};font-size:0.85rem;">sigma_P^2 = w^T * Sigma * w</code>
+              </div>
+              <p style="color:{TXT};font-size:0.88rem;line-height:1.85;">
+              VaR was <b style="color:{GOLD}">elegant, fast,</b> and
+              <b style="color:{RED}">wrong in ways that would take another decade to become apparent.</b>
+              </p>
+            </div>
+            <div class="mp-card" style="margin-top:12px;border-left:4px solid {RED};">
+              <p style="color:{RED};font-weight:700;">Hidden Consequence of Joint Normality</p>
+              <ul style="color:{TXT};font-size:0.86rem;line-height:1.9;padding-left:16px;margin:6px 0 0;">
+                <li><b style="color:{GOLD}">Zero tail dependence:</b> lambda_L = lambda_U = 0. As u to 0,
+                  joint extreme probability goes to zero.</li>
+                <li><b style="color:{RED}">Reality:</b> Markets disagree, repeatedly and violently.</li>
+              </ul>
+            </div>
+            """)
+        st.html(f'''<div class="section-hdr" style="margin-top:16px;">Interactive: Gaussian Tail Dependence = 0 for Any rho</div>''')
+        rho_pre = st.slider("Correlation rho", -0.95, 0.95, 0.70, 0.05, key="pre_rho")
+        U_pre = gaussian_copula_sample(rho_pre, 2000, seed=42)
+        mask_pre = (U_pre[:,0] < 0.05) & (U_pre[:,1] < 0.05)
+        fig_pre = go.Figure()
+        fig_pre.add_trace(go.Scatter(x=U_pre[:,0], y=U_pre[:,1], mode="markers",
+            marker=dict(color=BLUE, size=3, opacity=0.3), name="Joint sample"))
+        fig_pre.add_trace(go.Scatter(x=U_pre[mask_pre,0], y=U_pre[mask_pre,1], mode="markers",
+            marker=dict(color=RED, size=9, symbol="x", line=dict(color="white", width=1)),
+            name=f"Joint crashes: {mask_pre.sum()} (indep expects {int(0.05**2*2000)})"))
+        for v in [0.05, 0.95]:
+            fig_pre.add_vline(x=v, line_dash="dot", line_color=GOLD, line_width=1)
+            fig_pre.add_hline(y=v, line_dash="dot", line_color=GOLD, line_width=1)
+        apply_layout(fig_pre, mp_layout(
+            title=f"Gaussian Copula (rho={rho_pre}) - Tail Dependence = 0 Always",
+            xaxis_title="U1", yaxis_title="U2", height=360))
+        st.plotly_chart(fig_pre, use_container_width=True)
+        st.info(f"Even at rho = {rho_pre}, the Gaussian copula has zero tail dependence. Joint crashes: {mask_pre.sum()} vs {int(0.05**2*2000)} expected under independence.")
+
+    with tab_warn:
+        st.html(f'''<div class="section-hdr">The Warning Shots: Crises That Exposed the Models Limits</div>''')
+        crises_data = [
+            {
+                "title": "Black Monday - October 19, 1987", "col": RED,
+                "what": "The Dow fell 22.6% in one day. Equity markets worldwide fell simultaneously. Diversification benefits built on correlations of 0.3-0.5 evaporated in one session.",
+                "corr": "Pre-crash avg pairwise correlation between major equity indices: 0.35. During crash: implied correlations exceeded 0.95. A model calibrated on 5 prior years would estimate VaR at one-third of the actual loss.",
+                "lesson": "The Gaussian model had no mechanism to express that 'in a crash, everything falls together.' A t-copula or Clayton copula would have captured lower-tail clustering.",
+            },
+            {
+                "title": "Asian Financial Crisis - 1997", "col": ORANGE,
+                "what": "Thailand baht devaluation triggered sequential currency crises across Indonesia, South Korea, Malaysia, and the Philippines. The Indonesian Rupiah lost 80% of its value.",
+                "corr": "Standard correlation models dramatically understated joint crash risk. Cross-currency correlations in the lower tail were near 1.0 vs normal-period estimates of 0.3-0.5.",
+                "lesson": "Clayton copulas calibrated on stressed data would have shown lambda_L > 0.6 for these currency pairs. The Gaussian assumption led to systematic underestimation of joint currency risk.",
+            },
+            {
+                "title": "LTCM Collapse - August 1998", "col": "#ff6b6b",
+                "what": "LTCM employed Nobel laureates and held convergence trades betting on correlations returning to historical norms. Russia defaulted; every correlation assumption failed simultaneously. Loss: USD 4.6 billion in four months.",
+                "corr": "LTCM assumed the same correlation structure in the left tail as in the centre. Correlations between liquid and illiquid assets jumped from 0.3 to over 0.9.",
+                "lesson": "A copula with asymmetric tail dependence would have captured the non-linear change in co-movement under stress. Gaussian copula zero tail dependence made this scenario seem nearly impossible.",
+            },
+        ]
+        for crisis in crises_data:
+            with st.expander(crisis["title"], expanded=True):
+                ca, cb, cc = st.columns(3)
+                for col_st, heading, content in [
+                    (ca, "What Happened", crisis["what"]),
+                    (cb, "Correlation Evidence", crisis["corr"]),
+                    (cc, "Copula Lesson", crisis["lesson"]),
+                ]:
+                    col_st.html(f"""<div class="mp-card" style="height:100%;">
+                      <p style="color:{crisis["col"]};font-weight:700;font-size:0.9rem;margin-bottom:6px;">{heading}</p>
+                      <p style="color:{TXT};font-size:0.85rem;line-height:1.8;">{content}</p></div>""")
+
+    with tab_li:
+        st.html(f'''<div class="section-hdr">The Copula Paper That Changed Finance: David X. Li (2000)</div>''')
+        c1, c2 = st.columns([3, 2])
+        with c1:
+            st.html(f"""
+            <div class="mp-card mp-card-accent">
+              <p style="color:{GOLD};font-weight:700;font-size:1rem;margin-bottom:8px;">
+                "On Default Correlation: A Copula Function Approach" - Journal of Fixed Income, 2000
+              </p>
+              <p style="color:{TXT};font-size:0.88rem;line-height:1.85;">
+              Li applied Sklar (1959) copula theorem to model
+              <b style="color:{GOLD}">joint probability of default</b> for multiple credit obligors.
+              For survival times T_i, T_j:
+              </p>
+              <div style="background:#07101f;border-radius:8px;padding:14px;margin:12px 0;text-align:center;">
+                <code style="color:{GOLD};font-size:1rem;">P(Ti le ti, Tj le tj) = C_rho_Ga(Fi(ti), Fj(tj))</code>
+              </div>
+              <p style="color:{TXT};font-size:0.88rem;line-height:1.85;">
+              Where F_i is calibrated from CDS spreads, rho from historical equity correlations.
+              By 2003: standard CDO pricing model. By 2006: embedded in every major bank.
+              </p>
+            </div>
+            """)
+            reasons = [
+                ("One number per pair", "Just rho_ij via CORREL(). No complex optimisation."),
+                ("Closed-form", "No numerical integration. 100+ name CDOs priced fast."),
+                ("Modular", "Any survival distribution + any correlation. Mix and match."),
+                ("Excel-friendly", "NORM.S.INV, CORREL, SQRT - implementable in a spreadsheet."),
+            ]
+            cols_r = st.columns(2)
+            for i, (h, d) in enumerate(reasons):
+                cols_r[i%2].html(f"""<div style="background:#07101f;border-radius:8px;padding:10px;margin-bottom:8px;">
+                  <p style="color:{GOLD};font-size:0.82rem;font-weight:600;margin-bottom:3px;">{h}</p>
+                  <p style="color:{TXT};font-size:0.80rem;">{d}</p></div>""")
+        with c2:
+            st.html(f'''<p style="color:{GOLD};font-weight:700;margin-bottom:10px;">Adoption Timeline</p>''')
+            for year, text, col in [
+                ("2000","Li publishes Gaussian copula for CDOs",BLUE),
+                ("2001","First CDOs priced using the model",MID),
+                ("2003","Standard at all structured credit desks",GRN),
+                ("2004","Rating agencies adopt for tranche ratings",GRN),
+                ("2006","Embedded in every major bank",GOLD),
+                ("2007","First cracks - model begins failing",ORANGE),
+                ("2008","Collapse - trillions in losses",RED),
+                ("2009","Formula That Killed Wall St - Wired",RED),
+            ]:
+                txt_col = BLUE if col == GOLD else TXT
+                st.html(f"""<div style="display:flex;gap:8px;margin-bottom:9px;">
+                  <span style="background:{col};color:{txt_col};border-radius:5px;padding:2px 8px;
+                    font-size:0.7rem;font-weight:700;min-width:36px;text-align:center;">{year}</span>
+                  <span style="color:{TXT};font-size:0.82rem;">{text}</span></div>""")
+
+    with tab_cdo:
+        st.html(f'''<div class="section-hdr">The Structured Credit Boom and the Copula Fatal Flaw (2000-2008)</div>''')
+        c1, c2 = st.columns(2)
+        with c1:
+            st.html(f"""
+            <div class="mp-card mp-card-accent">
+              <p style="color:{GOLD};font-weight:700;font-size:1rem;">How the CDO Machine Worked</p>
+              <p style="color:{TXT};font-size:0.88rem;line-height:1.85;">
+              A CDO pools mortgages/bonds and repackages cash flows into tranches.
+              Key question: <b style="color:{GOLD}">how many obligors default simultaneously?</b>
+              The Gaussian copula: calibrate rho 0.05-0.30, run Monte Carlo, compute expected tranche losses.
+              Rating agencies awarded <b style="color:{GRN}">AAA ratings</b> to senior tranches.
+              </p>
+            </div>
+            """)
+        with c2:
+            flaws = [
+                ("1. Parameter Instability", "rho 0.10-0.20 calibrated on 2003-06 bull market. No credit stress in calibration."),
+                ("2. Zero Tail Dependence", "lambda_L = lambda_U = 0. A t-copula produces 3-8x more joint defaults in the tail."),
+                ("3. Correlation Homogeneity", "One rho for all pairs. Subprime mortgages same city/year had correlations above 0.90."),
+            ]
+            st.html(f'''<div class="mp-card" style="border-left:4px solid {RED};">
+              <p style="color:{RED};font-weight:700;font-size:1rem;">Three Fatal Flaws</p>''' +
+                "".join([f'''<div style="background:#07101f;border-radius:6px;padding:10px;margin-bottom:8px;">
+                  <p style="color:{GOLD};font-size:0.85rem;font-weight:600;margin-bottom:3px;">{h}</p>
+                  <p style="color:{TXT};font-size:0.82rem;">{d}</p></div>''' for h,d in flaws]) +
+            '''</div>''')
+        st.html(f'''<div class="section-hdr" style="margin-top:16px;">CDO Tranche Loss Probability vs Asset Correlation</div>''')
+        rho_cdo = st.slider("Li model assumed rho", 0.05, 0.50, 0.10, 0.01, key="cdo_rho")
+        rho_pts_cdo = [0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90]
+        np.random.seed(7)
+        eq_l_c, mz_l_c, sr_l_c = [], [], []
+        for r in rho_pts_cdo:
+            Z_c = np.random.randn(5000)
+            eps_c = np.random.randn(5000, 100)
+            X_c = r*Z_c[:,None] + np.sqrt(1-r**2)*eps_c
+            defs_c = (X_c < norm.ppf(0.03)).sum(axis=1)/100
+            eq_l_c.append(float(np.mean(defs_c > 0.03)))
+            mz_l_c.append(float(np.mean(defs_c > 0.07)))
+            sr_l_c.append(float(np.mean(defs_c > 0.12)))
+        fig_cdo = go.Figure()
+        fig_cdo.add_trace(go.Scatter(x=rho_pts_cdo, y=eq_l_c, name="Equity (>3% loss)", line=dict(color=RED, width=2.5), mode="lines+markers"))
+        fig_cdo.add_trace(go.Scatter(x=rho_pts_cdo, y=mz_l_c, name="Mezzanine (>7%)", line=dict(color=ORANGE, width=2.5), mode="lines+markers"))
+        fig_cdo.add_trace(go.Scatter(x=rho_pts_cdo, y=sr_l_c, name="Senior AAA (>12%)", line=dict(color=BLUE, width=2.5), mode="lines+markers"))
+        fig_cdo.add_vline(x=rho_cdo, line_dash="dash", line_color=GOLD, annotation_text=f"Li model rho={rho_cdo}", annotation_font_color=GOLD, annotation_font_size=10)
+        fig_cdo.add_vline(x=0.75, line_dash="dash", line_color=RED, annotation_text="Crisis rho 0.75+", annotation_font_color=RED, annotation_font_size=10)
+        apply_layout(fig_cdo, mp_layout(title="CDO Tranche Loss Probability vs Asset Correlation", xaxis_title="Correlation rho", yaxis_title="Tranche Loss Probability", height=380))
+        st.plotly_chart(fig_cdo, use_container_width=True)
+        closest_i = min(range(len(rho_pts_cdo)), key=lambda i: abs(rho_pts_cdo[i]-rho_cdo))
+        st.error(f"At Li model rho = {rho_cdo}: Senior AAA loss prob = {sr_l_c[closest_i]*100:.1f}%. At crisis rho = 0.75: dramatically higher. The entire CDO rating system was built on the left side of this chart.")
+
+    with tab_aft:
+        st.html(f'''<div class="section-hdr">2008 Crisis and Its Aftermath: A New Approach to Dependence</div>''')
+        c1, c2 = st.columns(2)
+        with c1:
+            st.html(f"""
+            <div class="mp-card" style="border-left:4px solid {RED};">
+              <p style="color:{RED};font-weight:700;font-size:1rem;margin-bottom:8px;">September 15, 2008 - Lehman Brothers</p>
+              <p style="color:{TXT};font-size:0.88rem;line-height:1.85;">
+              The structured credit market collapsed. CDO tranches rated AAA traded at
+              <b style="color:{RED}">30-40 cents on the dollar.</b> Banks that used the Gaussian copula
+              to justify thin capital buffers faced insolvency.
+              Wired (Feb 2009): <i style="color:{GOLD}">"Recipe for Disaster: The Formula That Killed Wall Street"</i>
+              </p>
+            </div>
+            <div class="mp-card" style="margin-top:12px;">
+              <p style="color:{GOLD};font-weight:700;margin-bottom:8px;">Evolution of Dependence Models</p>
+              <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+                <thead><tr style="border-bottom:1px solid rgba(255,215,0,0.3);">
+                  <th style="color:{GOLD};padding:6px;text-align:left;">Era</th>
+                  <th style="color:{GOLD};padding:6px;text-align:left;">Model</th>
+                  <th style="color:{GOLD};padding:6px;text-align:left;">Flaw Exposed</th>
+                </tr></thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid rgba(0,51,102,0.4);"><td style="padding:6px;color:{TXT};">Pre-1987</td><td style="padding:6px;color:{GOLD};">Markowitz covariance</td><td style="padding:6px;color:{MUTED};">Ignores fat tails</td></tr>
+                  <tr style="border-bottom:1px solid rgba(0,51,102,0.4);"><td style="padding:6px;color:{TXT};">1987-1994</td><td style="padding:6px;color:{GOLD};">RiskMetrics VaR</td><td style="padding:6px;color:{MUTED};">Constant correlation</td></tr>
+                  <tr style="border-bottom:1px solid rgba(0,51,102,0.4);"><td style="padding:6px;color:{TXT};">1994-2008</td><td style="padding:6px;color:{GOLD};">Gaussian copula</td><td style="padding:6px;color:{MUTED};">Zero tail dependence</td></tr>
+                  <tr style="border-bottom:1px solid rgba(0,51,102,0.4);"><td style="padding:6px;color:{TXT};">Post-2008</td><td style="padding:6px;color:{GOLD};">t-Copula, Archimedean</td><td style="padding:6px;color:{MUTED};">Symmetric vs asymmetric</td></tr>
+                  <tr><td style="padding:6px;color:{TXT};">Post-2013</td><td style="padding:6px;color:{GOLD};">Vine, DCC-GARCH</td><td style="padding:6px;color:{MUTED};">Time-varying, high-dim</td></tr>
+                </tbody>
+              </table>
+            </div>
+            """)
+        with c2:
+            reg_items = [
+                ("Basel III (2010)", "Banks must compute VaR under both normal and stressed correlation matrices. No longer optional."),
+                ("CVaR replaces VaR (FRTB 2016)", "Expected Shortfall penalises zero-tail-dependence models. Capital must cover the full tail."),
+                ("Correlation Bounds", "Standardised approach specifies rho ranges within and between risk classes."),
+                ("Model Validation", "Backtesting must confirm joint loss scenarios are not systematically underestimated."),
+            ]
+            st.html(f'''<div class="mp-card"><p style="color:{GOLD};font-weight:700;font-size:1rem;margin-bottom:8px;">Regulatory Response: Basel III & FRTB</p>''' +
+                "".join([f'''<div style="background:#07101f;border-radius:6px;padding:10px;margin-bottom:8px;">
+                  <p style="color:{GRN};font-size:0.85rem;font-weight:600;">{h}</p>
+                  <p style="color:{TXT};font-size:0.82rem;">{d}</p></div>''' for h,d in reg_items]) +
+            '''</div>''')
+
+    with tab_skl:
+        st.html(f'''<div class="section-hdr">The Mathematical Origins: Sklar Theorem (1959)</div>''')
+        c1, c2 = st.columns([2, 3])
+        with c1:
+            st.html(f"""
+            <div class="mp-card mp-card-accent">
+              <p style="color:{GOLD};font-weight:700;font-size:1rem;margin-bottom:8px;">Abe Sklar (1959)</p>
+              <p style="color:{TXT};font-size:0.88rem;line-height:1.85;">
+              The mathematics predates the finance by <b style="color:{GOLD}">four decades.</b>
+              Sklar published in 1959 in probabilistic metric spaces - entirely without financial applications.
+              For thirty years copulas were used only in actuarial science.
+              The machinery was <b>complete and waiting.</b>
+              It took a sequence of financial crises to drive practitioners to discover it.
+              </p>
+              <div style="background:#07101f;border-radius:8px;padding:14px;margin-top:12px;">
+                <p style="color:{GOLD};font-size:0.9rem;font-weight:700;margin-bottom:6px;">Sklar Theorem</p>
+                <p style="color:{TXT};font-size:0.85rem;line-height:1.7;">For any joint CDF H(x1,...,xn) with marginals F1,...,Fn, there exists a unique copula C such that:</p>
+                <div style="text-align:center;padding:10px;">
+                  <code style="color:{GOLD};font-size:0.92rem;">H(x1,...,xn) = C(F1(x1),...,Fn(xn))</code>
+                </div>
+                <p style="color:{LB};font-size:0.82rem;">Any joint distribution = copula + individual marginals.</p>
+              </div>
+            </div>
+            """)
+        with c2:
+            st.html(f'''<p style="color:{GOLD};font-weight:600;font-size:1rem;margin-bottom:10px;">From Pure Mathematics to Market Standard</p>''')
+            timeline_items = [
+                ("1959","Sklar publishes in probabilistic metric spaces. No financial application intended.",BLUE,"🧮"),
+                ("1960s-80s","Copulas used in actuarial science and extreme value theory only.",MID,"📊"),
+                ("1992","Genest & Rivest formalise Archimedean copulas for applied statistical work.",GRN,"📐"),
+                ("1999","Embrechts, McNeil & Straumann connect copulas explicitly to financial risk.",GRN,"💡"),
+                ("2000","David X. Li publishes Gaussian copula for default correlation. Finance discovers copulas.",GOLD,"📄"),
+                ("2001-06","Rapid Wall Street adoption. CDO pricing standardises on the Gaussian copula.",ORANGE,"🏦"),
+                ("2008","Gaussian copula blamed in media and regulatory reports for CDO mispricing.",RED,"🔥"),
+                ("2009-13","t-Copula, Archimedean families, and Vine copulas adopted as replacements.",GRN,"✅"),
+                ("2016","FRTB mandates stress-tested dependence modelling. Copulas become regulatory.",GRN,"🏛️"),
+                ("2020+","Dynamic copulas (DCC-GARCH + copula) become standard in bank IMM models.",GRN,"🚀"),
+            ]
+            for year, desc, col, icon in timeline_items:
+                txt_col = BLUE if col == GOLD else TXT
+                st.html(f"""<div style="display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;">
+                  <div style="display:flex;flex-direction:column;align-items:center;min-width:70px;">
+                    <div style="background:{col};color:{txt_col};border-radius:6px;padding:3px 8px;font-size:0.72rem;font-weight:700;text-align:center;">{year}</div>
+                    <div style="font-size:1rem;margin-top:3px;">{icon}</div>
+                  </div>
+                  <div style="background:#07101f;border-radius:6px;padding:8px 12px;flex:1;">
+                    <p style="color:{TXT};font-size:0.82rem;margin:0;line-height:1.6;">{desc}</p>
+                  </div></div>""")
+
+    with tab_found:
+        st.html(f'''<div class="section-hdr">What Is a Copula? - Core Foundations</div>''')
+        c1, c2 = st.columns(2)
+        with c1:
+            st.html(f"""
+            <div class="mp-card mp-card-accent">
+              <p style="color:{GOLD};font-weight:700;font-size:1rem;margin-bottom:8px;">Core Definition</p>
+              <p style="color:{TXT};font-size:0.88rem;line-height:1.85;">
+              A <b style="color:{GOLD}">copula</b> is a multivariate probability distribution on [0,1]^n
+              with uniform marginal distributions. It models <b>only the dependence structure</b>,
+              completely separated from individual marginals.
+              </p>
+              <div style="background:#07101f;border-radius:8px;padding:12px;margin:12px 0;">
+                <p style="color:{GOLD};font-size:0.88rem;font-weight:600;margin-bottom:6px;">Three Separate Questions</p>
+                <ol style="color:{TXT};font-size:0.85rem;line-height:1.9;padding-left:16px;margin:0;">
+                  <li><b style="color:{LB}">What does Asset X look like alone?</b> Marginal F_X</li>
+                  <li><b style="color:{LB}">What does Asset Y look like alone?</b> Marginal F_Y</li>
+                  <li><b style="color:{GOLD}">How do X and Y move together?</b> Copula C</li>
+                </ol>
+              </div>
+              <p style="color:{GOLD};font-weight:700;margin-bottom:8px;">Why Not Just Use Correlation? - 4 Key Reasons</p>
+              <ul style="color:{TXT};font-size:0.85rem;line-height:2;list-style:none;padding:0;">
+                <li><span style="color:{RED};">1</span> <b>Linear only</b> - measures only linear co-movement</li>
+                <li><span style="color:{RED};">2</span> <b>Not margin-free</b> - mixes marginals into dependence</li>
+                <li><span style="color:{RED};">3</span> <b>Tail blindness</b> - silent on joint extreme events</li>
+                <li><span style="color:{RED};">4</span> <b>Not invariant</b> - Corr(X,Y) not equal Corr(f(X),g(Y))</li>
+              </ul>
+            </div>
+            """)
+        with c2:
+            st.html(f"""
+            <div class="mp-card">
+              <p style="color:{GOLD};font-weight:700;font-size:1rem;margin-bottom:8px;">Copula Family Summary</p>
+              <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+                <thead><tr style="border-bottom:1px solid rgba(255,215,0,0.3);">
+                  <th style="color:{GOLD};padding:7px;text-align:left;">Copula</th>
+                  <th style="color:{GOLD};padding:7px;text-align:center;">lambda_L</th>
+                  <th style="color:{GOLD};padding:7px;text-align:center;">lambda_U</th>
+                  <th style="color:{GOLD};padding:7px;text-align:left;">Best For</th>
+                </tr></thead>
+                <tbody>
+                  <tr style="border-bottom:1px solid rgba(0,51,102,0.4);"><td style="padding:7px;color:{LB};">Gaussian</td><td style="padding:7px;text-align:center;color:{MUTED};">0</td><td style="padding:7px;text-align:center;color:{MUTED};">0</td><td style="padding:7px;color:{TXT};">Baseline; large portfolios</td></tr>
+                  <tr style="border-bottom:1px solid rgba(0,51,102,0.4);"><td style="padding:7px;color:{RED};">Student-t</td><td style="padding:7px;text-align:center;color:{GRN};">+</td><td style="padding:7px;text-align:center;color:{GRN};">+</td><td style="padding:7px;color:{TXT};">Equity; symmetric tails</td></tr>
+                  <tr style="border-bottom:1px solid rgba(0,51,102,0.4);"><td style="padding:7px;color:{GRN};">Clayton</td><td style="padding:7px;text-align:center;color:{GRN};">+</td><td style="padding:7px;text-align:center;color:{MUTED};">0</td><td style="padding:7px;color:{TXT};">Credit defaults; crashes</td></tr>
+                  <tr style="border-bottom:1px solid rgba(0,51,102,0.4);"><td style="padding:7px;color:{ORANGE};">Gumbel</td><td style="padding:7px;text-align:center;color:{MUTED};">0</td><td style="padding:7px;text-align:center;color:{GRN};">+</td><td style="padding:7px;color:{TXT};">Commodity booms; rallies</td></tr>
+                  <tr><td style="padding:7px;color:{MUTED};">Frank</td><td style="padding:7px;text-align:center;color:{MUTED};">0</td><td style="padding:7px;text-align:center;color:{MUTED};">0</td><td style="padding:7px;color:{TXT};">Mild symmetric; neg rho</td></tr>
+                </tbody>
+              </table>
+            </div>
+            """)
+            st.html(f'''<p style="color:{GOLD};font-weight:600;margin-top:14px;">Interactive Sklar Demo</p>''')
+            rho_found = st.slider("Copula rho (Gaussian)", -0.9, 0.9, 0.65, 0.05, key="found_rho")
+            np.random.seed(42)
+            U_fd = gaussian_copula_sample(rho_found, 1200, seed=42)
+            X_fd1 = stats.skewnorm.ppf(U_fd[:,0], a=4, loc=0.001, scale=0.012)
+            X_fd2 = stats.t.ppf(U_fd[:,1], df=4, loc=0.0005, scale=0.009)
+            fig_fd = make_subplots(1, 2, subplot_titles=["Copula Space (uniform)", "Output (mixed marginals)"])
+            fig_fd.add_trace(go.Scatter(x=U_fd[:,0], y=U_fd[:,1], mode="markers", marker=dict(color=GOLD, size=3, opacity=0.35), name="Copula"), 1, 1)
+            fig_fd.add_trace(go.Scatter(x=X_fd1, y=X_fd2, mode="markers", marker=dict(color=LB, size=3, opacity=0.35), name="Skewed-t margins"), 1, 2)
+            apply_layout(fig_fd, mp_layout(title=f"Same Copula (rho={rho_found}), Different Marginals", height=300), rows=1, cols=2)
+            for ann in fig_fd.layout.annotations: ann.font.color = GOLD; ann.font.size = 10
+            st.plotly_chart(fig_fd, use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════
 #  PAGE: CORRELATION EXPLORER
