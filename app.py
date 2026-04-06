@@ -240,9 +240,8 @@ st.sidebar.markdown("---")
 st.sidebar.html(f"""
 <div style="font-size:0.68rem;color:{MUTED};text-align:center;line-height:1.6;">
   <b style="color:{GOLD}">Prof. V. Ravichandran</b><br>
-  Visiting Faculty @ NMIMS Bangalore,<br>
-  BITS Pilani, RV University,<br>
-  Goa Institute of Management<br><br>
+  Professor of Practice &amp; Visiting Faculty<br>
+  @ Business Schools India<br><br>
   <a href="https://themountainpathacademy.com" style="color:{GOLD}">
     themountainpathacademy.com
   </a><br>
@@ -1358,7 +1357,7 @@ st.html(f"""
   <a href="https://linkedin.com/in/trichyravis" style="color:{LB}">LinkedIn</a>
   &nbsp;·&nbsp;
   <a href="https://github.com/trichyravis" style="color:{LB}">GitHub</a><br>
-  Visiting Faculty @ NMIMS Bangalore · BITS Pilani · RV University Bangalore · Goa Institute of Management<br>
+  Professor of Practice &amp; Visiting Faculty @ Business Schools India<br>
   <span style="color:{MUTED};font-size:0.68rem;">
     Prof. V. Ravichandran · 28+ Years Corporate Finance & Banking · 10+ Years Academia
   </span>
